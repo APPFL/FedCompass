@@ -6,13 +6,13 @@ import logging
 from typing import Optional
 from concurrent import futures
 from omegaconf import OmegaConf
-from .grpc_communicator_new_pb2 import *
-from .grpc_communicator_new_pb2_grpc import *
+from .grpc_communicator_pb2 import *
+from .grpc_communicator_pb2_grpc import *
 from appfl.agent import APPFLServerAgent
 from appfl.logger import ServerAgentFileLogger
-from .utils import proto_to_databuffer_new, serialize_model
+from .utils import proto_to_databuffer, serialize_model
 
-class NewGRPCCommunicator(NewGRPCCommunicatorServicer):
+class GRPCServerCommunicator(GRPCCommunicatorServicer):
     def __init__(
         self,
         server_agent: APPFLServerAgent,
@@ -70,13 +70,13 @@ class NewGRPCCommunicator(NewGRPCCommunicatorServicer):
             global_model=model_serialized,
             meta_data=meta_data,
         )
-        for bytes in proto_to_databuffer_new(response_proto, max_message_size=self.max_message_size):
+        for bytes in proto_to_databuffer(response_proto, max_message_size=self.max_message_size):
             yield bytes
 
     def UpdateGlobalModel(self, request_iterator, context):
         """
         Update the global model with the local model from a client. This method will return the updated global model to the client as a stream of messages.
-        :param: request_iterator: A stream of `DataBufferNew` messages - which contains serialized request in `UpdateGlobalModelRequest` type.
+        :param: request_iterator: A stream of `DataBuffer` messages - which contains serialized request in `UpdateGlobalModelRequest` type.
 
         If concatenating all messages in `request_iterator` to get a `request`, then
         :param: request.header.client_id: A unique client ID
@@ -107,7 +107,7 @@ class NewGRPCCommunicator(NewGRPCCommunicatorServicer):
             global_model=global_model_serialized,
             meta_data=meta_data,
         )
-        for bytes in proto_to_databuffer_new(response, max_message_size=self.max_message_size):
+        for bytes in proto_to_databuffer(response, max_message_size=self.max_message_size):
             yield bytes
     
     def CustomAction(self, request, context):
@@ -152,7 +152,7 @@ def serve(servicer, max_message_size=2 * 1024 * 1024):
             ("grpc.max_receive_message_length", max_message_size),
         ],
     )
-    add_NewGRPCCommunicatorServicer_to_server(
+    add_GRPCCommunicatorServicer_to_server(
         servicer, server
     )
     server.add_insecure_port("localhost:50051")

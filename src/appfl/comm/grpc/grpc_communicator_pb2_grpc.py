@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from . import grpc_communicator_new_pb2 as grpc__communicator__new__pb2
+from . import grpc_communicator_pb2 as grpc__communicator__pb2
 
 
-class NewGRPCCommunicatorStub(object):
+class GRPCCommunicatorStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,28 +15,28 @@ class NewGRPCCommunicatorStub(object):
             channel: A grpc.Channel.
         """
         self.GetConfiguration = channel.unary_unary(
-                '/NewGRPCCommunicator/GetConfiguration',
-                request_serializer=grpc__communicator__new__pb2.ConfigurationRequest.SerializeToString,
-                response_deserializer=grpc__communicator__new__pb2.ConfigurationResponse.FromString,
+                '/GRPCCommunicator/GetConfiguration',
+                request_serializer=grpc__communicator__pb2.ConfigurationRequest.SerializeToString,
+                response_deserializer=grpc__communicator__pb2.ConfigurationResponse.FromString,
                 )
         self.GetGlobalModel = channel.unary_stream(
-                '/NewGRPCCommunicator/GetGlobalModel',
-                request_serializer=grpc__communicator__new__pb2.GetGlobalModelRequest.SerializeToString,
-                response_deserializer=grpc__communicator__new__pb2.DataBufferNew.FromString,
+                '/GRPCCommunicator/GetGlobalModel',
+                request_serializer=grpc__communicator__pb2.GetGlobalModelRequest.SerializeToString,
+                response_deserializer=grpc__communicator__pb2.DataBuffer.FromString,
                 )
         self.UpdateGlobalModel = channel.stream_stream(
-                '/NewGRPCCommunicator/UpdateGlobalModel',
-                request_serializer=grpc__communicator__new__pb2.DataBufferNew.SerializeToString,
-                response_deserializer=grpc__communicator__new__pb2.DataBufferNew.FromString,
+                '/GRPCCommunicator/UpdateGlobalModel',
+                request_serializer=grpc__communicator__pb2.DataBuffer.SerializeToString,
+                response_deserializer=grpc__communicator__pb2.DataBuffer.FromString,
                 )
         self.CustomAction = channel.unary_unary(
-                '/NewGRPCCommunicator/CustomAction',
-                request_serializer=grpc__communicator__new__pb2.CustomActionRequest.SerializeToString,
-                response_deserializer=grpc__communicator__new__pb2.CustomActionResponse.FromString,
+                '/GRPCCommunicator/CustomAction',
+                request_serializer=grpc__communicator__pb2.CustomActionRequest.SerializeToString,
+                response_deserializer=grpc__communicator__pb2.CustomActionResponse.FromString,
                 )
 
 
-class NewGRPCCommunicatorServicer(object):
+class GRPCCommunicatorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetConfiguration(self, request, context):
@@ -64,36 +64,36 @@ class NewGRPCCommunicatorServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_NewGRPCCommunicatorServicer_to_server(servicer, server):
+def add_GRPCCommunicatorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetConfiguration': grpc.unary_unary_rpc_method_handler(
                     servicer.GetConfiguration,
-                    request_deserializer=grpc__communicator__new__pb2.ConfigurationRequest.FromString,
-                    response_serializer=grpc__communicator__new__pb2.ConfigurationResponse.SerializeToString,
+                    request_deserializer=grpc__communicator__pb2.ConfigurationRequest.FromString,
+                    response_serializer=grpc__communicator__pb2.ConfigurationResponse.SerializeToString,
             ),
             'GetGlobalModel': grpc.unary_stream_rpc_method_handler(
                     servicer.GetGlobalModel,
-                    request_deserializer=grpc__communicator__new__pb2.GetGlobalModelRequest.FromString,
-                    response_serializer=grpc__communicator__new__pb2.DataBufferNew.SerializeToString,
+                    request_deserializer=grpc__communicator__pb2.GetGlobalModelRequest.FromString,
+                    response_serializer=grpc__communicator__pb2.DataBuffer.SerializeToString,
             ),
             'UpdateGlobalModel': grpc.stream_stream_rpc_method_handler(
                     servicer.UpdateGlobalModel,
-                    request_deserializer=grpc__communicator__new__pb2.DataBufferNew.FromString,
-                    response_serializer=grpc__communicator__new__pb2.DataBufferNew.SerializeToString,
+                    request_deserializer=grpc__communicator__pb2.DataBuffer.FromString,
+                    response_serializer=grpc__communicator__pb2.DataBuffer.SerializeToString,
             ),
             'CustomAction': grpc.unary_unary_rpc_method_handler(
                     servicer.CustomAction,
-                    request_deserializer=grpc__communicator__new__pb2.CustomActionRequest.FromString,
-                    response_serializer=grpc__communicator__new__pb2.CustomActionResponse.SerializeToString,
+                    request_deserializer=grpc__communicator__pb2.CustomActionRequest.FromString,
+                    response_serializer=grpc__communicator__pb2.CustomActionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'NewGRPCCommunicator', rpc_method_handlers)
+            'GRPCCommunicator', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class NewGRPCCommunicator(object):
+class GRPCCommunicator(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -107,9 +107,9 @@ class NewGRPCCommunicator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/NewGRPCCommunicator/GetConfiguration',
-            grpc__communicator__new__pb2.ConfigurationRequest.SerializeToString,
-            grpc__communicator__new__pb2.ConfigurationResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/GRPCCommunicator/GetConfiguration',
+            grpc__communicator__pb2.ConfigurationRequest.SerializeToString,
+            grpc__communicator__pb2.ConfigurationResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -124,9 +124,9 @@ class NewGRPCCommunicator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/NewGRPCCommunicator/GetGlobalModel',
-            grpc__communicator__new__pb2.GetGlobalModelRequest.SerializeToString,
-            grpc__communicator__new__pb2.DataBufferNew.FromString,
+        return grpc.experimental.unary_stream(request, target, '/GRPCCommunicator/GetGlobalModel',
+            grpc__communicator__pb2.GetGlobalModelRequest.SerializeToString,
+            grpc__communicator__pb2.DataBuffer.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -141,9 +141,9 @@ class NewGRPCCommunicator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/NewGRPCCommunicator/UpdateGlobalModel',
-            grpc__communicator__new__pb2.DataBufferNew.SerializeToString,
-            grpc__communicator__new__pb2.DataBufferNew.FromString,
+        return grpc.experimental.stream_stream(request_iterator, target, '/GRPCCommunicator/UpdateGlobalModel',
+            grpc__communicator__pb2.DataBuffer.SerializeToString,
+            grpc__communicator__pb2.DataBuffer.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -158,8 +158,8 @@ class NewGRPCCommunicator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/NewGRPCCommunicator/CustomAction',
-            grpc__communicator__new__pb2.CustomActionRequest.SerializeToString,
-            grpc__communicator__new__pb2.CustomActionResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/GRPCCommunicator/CustomAction',
+            grpc__communicator__pb2.CustomActionRequest.SerializeToString,
+            grpc__communicator__pb2.CustomActionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

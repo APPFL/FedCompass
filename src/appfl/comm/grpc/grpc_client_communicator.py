@@ -2,11 +2,11 @@ import io
 import grpc
 import json
 import torch
-from .grpc_communicator_new_pb2 import *
-from .grpc_communicator_new_pb2_grpc import *
+from .grpc_communicator_pb2 import *
+from .grpc_communicator_pb2_grpc import *
 from omegaconf import OmegaConf, DictConfig
 from typing import Union, Dict, OrderedDict, Tuple
-from appfl.comm.grpc import proto_to_databuffer_new, serialize_model
+from appfl.comm.grpc import proto_to_databuffer, serialize_model
 
 class GRPCClientCommunicator:
     """
@@ -34,7 +34,7 @@ class GRPCClientCommunicator:
             options=channel_options
         )
         grpc.channel_ready_future(channel).result(timeout=60)
-        self.stub = NewGRPCCommunicatorStub(channel)
+        self.stub = GRPCCommunicatorStub(channel)
 
     def get_configuration(self, **kwargs) -> DictConfig:
         """
@@ -92,7 +92,7 @@ class GRPCClientCommunicator:
             meta_data=meta_data,
         )
         byte_received = b''
-        for byte in self.stub.UpdateGlobalModel(proto_to_databuffer_new(request, max_message_size=self.max_message_size)):
+        for byte in self.stub.UpdateGlobalModel(proto_to_databuffer(request, max_message_size=self.max_message_size)):
             byte_received += byte.data_bytes
         response = UpdateGlobalModelResponse()
         response.ParseFromString(byte_received)
