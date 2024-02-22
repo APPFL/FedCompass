@@ -1,5 +1,5 @@
 
-<p align="center" style="font-size: 24px;">
+<p align="center" style="font-size: 140%;">
     <b>🧭 FedCompass - Efficient Cross-Silo Federated Learning with a Computing Power Aware Scheduler.</b>
 </p>
 
