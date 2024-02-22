@@ -35,6 +35,7 @@ setuptools.setup(
         "omegaconf",
         "matplotlib",
         "torchvision",
+        "globus-sdk",
     ],
     entry_points={
         "console_scripts": [

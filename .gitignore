@@ -2,3 +2,6 @@
 .vscode
 __pycache__/
 *.egg-info/
+*output
+*outputs
+*RawData
