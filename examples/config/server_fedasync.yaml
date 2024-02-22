@@ -1,0 +1,55 @@
+client_configs:
+  train_configs:
+    # Local trainer
+    trainer: "NaiveTrainer"
+    mode: "step"
+    num_local_steps: 100
+    num_global_epochs: 5
+    optim: "SGD"
+    optim_args:
+      lr: 0.01
+    # Loss function
+    loss_fn_path: "./loss/celoss.py"
+    loss_fn_name: "CELoss"
+    # Client validation
+    do_validation: True
+    metric_path: "./metric/acc.py"
+    metric_name: "accuracy"
+    # Differential privacy
+    use_dp: False
+    epsilon: 1
+    clip_grad: False
+    clip_value: 1
+    clip_norm: 1
+    # Data format
+    send_gradient: True
+
+  model_configs:
+    model_path: "./model/cnn.py"
+    model_name: "CNN"
+    model_kwargs:
+      num_channel: 1
+      num_classes: 10
+      num_pixel: 28
+  
+  comm_configs:
+    enable_compression: False
+
+server_configs:
+  scheduler: "AsyncScheduler"
+  scheduler_kwargs:
+    num_clients: 2
+    same_init_model: True
+  aggregator: "FedAsyncAggregator"
+  aggregator_kwargs:
+    weights: "equal"
+    staleness_fn: "polynomial"
+    staleness_fn_kwargs:
+      a: 0.5
+    alpha: 0.9
+    gradient_based: True
+  device: "cpu"
+  num_epochs: 2
+  server_validation: False
+  logging_output_dirname: "./output"
+  logging_output_filename: "result"

@@ -1,0 +1,17 @@
+train_configs:
+  # Device
+  device: "cpu"
+  # Logging and outputs
+  logging_id: "Client2"
+  logging_output_dirname: "./output"
+  logging_output_filename: "result"
+
+# Local dataloader
+data_configs:
+  dataloader_path: "./dataloader/mnist_dataloader.py"
+  dataloader_name: "get_mnist"
+  dataloader_kwargs:
+    num_clients: 2
+    client_id: 1
+    train_batch_size: 64
+    test_batch_size: 64
