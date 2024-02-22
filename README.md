@@ -16,12 +16,12 @@
   </a>
 </p>
 
-## 🎙 Introduction
+### 🎙 Introduction
 FedCompass is a semi-asynchrnous federated learning (FL) algorithm which addresses the time-efficiency challenge of other synchronous FL algorithms, and the model performance challenge of other asynchronous FL algorithms (due to model stalenesses) by using a *COM*puting *P*ower *A*ware *Scheduler* *(COMPASS)* to adaptively assign different numbers of local steps to different FL clients and synchrnoize the arrival of client local models. 
 
 This repository is built upon the open-source and highly extendible FL framework [APPFL](https://github.com/APPFL/APPFL) and employs gRPC as the communication protocol to help you easily launch FL experiment using FedCompass among distributed FL clients.
 
-## ⚙️ Installation
+### ⚙️ Installation
 Users can install by cloning this repository and installing the package locally. We also highly recommend to create a virtual environment for easy dependency management.
 ```bash
 conda create -n fedcompass python=3.8
@@ -30,7 +30,7 @@ git clone https://github.com/APPFL/FedCompass.git && cd FedCompass
 pip install -e .
 ```
 
-## 🚀 Launch First Example Experiment
+### 🚀 Launch First Example Experiment
 Please go to the `examples` folder first. To launch a server, users can run the following command, 
 ```bash
 python run_server.py --config config/server_fedcompass.yaml
@@ -49,7 +49,7 @@ python run_client_2.py
 ```
 
 
-## 📃 Citation
+### 📃 Citation
 If you find FedCompass and this repository useful to your research, please consider cite the following paper
 ```
 @article{li2023fedcompass,
