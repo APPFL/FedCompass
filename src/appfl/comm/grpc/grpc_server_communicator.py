@@ -144,7 +144,7 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         logger.addHandler(s_handler)
         return logger
 
-def serve(servicer, max_message_size=2 * 1024 * 1024):
+def serve(servicer, max_message_size=2 * 1024 * 1024, server_uri="localhost:50051"):
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=10),
         options=[
@@ -155,7 +155,7 @@ def serve(servicer, max_message_size=2 * 1024 * 1024):
     add_GRPCCommunicatorServicer_to_server(
         servicer, server
     )
-    server.add_insecure_port("localhost:50051")
+    server.add_insecure_port(server_uri)
     server.start()
     try:
         server.wait_for_termination()
