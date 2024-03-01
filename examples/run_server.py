@@ -18,4 +18,4 @@ server_agent_config = OmegaConf.load(args.config)
 server_agent = APPFLServerAgent(server_agent_config=server_agent_config)
 
 communicator = GRPCServerCommunicator(server_agent, max_message_size=max_message_size)
-serve(communicator, max_message_size)
+serve(communicator, max_message_size, server_uri="localhost:50051")
