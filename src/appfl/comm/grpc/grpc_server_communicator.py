@@ -144,22 +144,22 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         logger.addHandler(s_handler)
         return logger
 
-def serve(servicer, max_message_size=2 * 1024 * 1024, server_uri="localhost:50051"):
-    server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10),
-        options=[
-            ("grpc.max_send_message_length", max_message_size),
-            ("grpc.max_receive_message_length", max_message_size),
-        ],
-    )
-    add_GRPCCommunicatorServicer_to_server(
-        servicer, server
-    )
-    server.add_insecure_port(server_uri)
-    server.start()
-    try:
-        server.wait_for_termination()
-    except KeyboardInterrupt:
-        logger = logging.getLogger(__name__)
-        logger.info("Terminating the server ...")
-        return
+# def serve(servicer, max_message_size=2 * 1024 * 1024, server_uri="localhost:50051"):
+#     server = grpc.server(
+#         futures.ThreadPoolExecutor(max_workers=10),
+#         options=[
+#             ("grpc.max_send_message_length", max_message_size),
+#             ("grpc.max_receive_message_length", max_message_size),
+#         ],
+#     )
+#     add_GRPCCommunicatorServicer_to_server(
+#         servicer, server
+#     )
+#     server.add_insecure_port(server_uri)
+#     server.start()
+#     try:
+#         server.wait_for_termination()
+#     except KeyboardInterrupt:
+#         logger = logging.getLogger(__name__)
+#         logger.info("Terminating the server ...")
+#         return

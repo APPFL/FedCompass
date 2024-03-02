@@ -15,3 +15,16 @@ data_configs:
     client_id: 0
     train_batch_size: 64
     test_batch_size: 64
+
+comm_configs:
+  server_uri: localhost:50051
+  max_message_size: 1048576
+
+  # use_ssl: False
+  # SSL configurations
+  use_ssl: True
+  use_authenticator: True
+  root_certificate: ../src/appfl/comm/grpc/credentials/root.crt
+  authenticator: NaiveAuthenticator
+  authenticator_args:
+    auth_token: a-secret-token

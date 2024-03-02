@@ -20,3 +20,7 @@ def serialize_model(model):
     buffer = io.BytesIO()
     torch.save(model, buffer)
     return buffer.getvalue()
+
+def load_credential_from_file(filepath):
+    with open(filepath, "rb") as f:
+        return f.read()

@@ -5,8 +5,8 @@ import torch
 from .grpc_communicator_pb2 import *
 from .grpc_communicator_pb2_grpc import *
 from omegaconf import OmegaConf, DictConfig
-from typing import Union, Dict, OrderedDict, Tuple
-from appfl.comm.grpc import proto_to_databuffer, serialize_model
+from typing import Union, Dict, OrderedDict, Tuple, Optional, Any
+from appfl.comm.grpc import proto_to_databuffer, serialize_model, create_grpc_channel
 
 class GRPCClientCommunicator:
     """
@@ -14,10 +14,16 @@ class GRPCClientCommunicator:
     """
     def __init__(
         self, 
+        client_id: Union[str, int],
         *,
-        client_id,
-        server_uri,
-        max_message_size,
+        server_uri: str,
+        use_ssl: bool = False,
+        use_authenticator: bool = False,
+        root_certificate: Optional[Union[str, bytes]] = None,
+        authenticator: Optional[str] = None,
+        authenticator_args: Dict[str, Any] = {},
+        max_message_size: int = 2 * 1024 * 1024,
+        **kwargs,
     ):
         """
         Create a channel to the server and initialize the gRPC stub.
@@ -25,13 +31,14 @@ class GRPCClientCommunicator:
         """
         self.client_id = client_id
         self.max_message_size = max_message_size
-        channel_options = [
-            ("grpc.max_send_message_length", max_message_size),
-            ("grpc.max_receive_message_length", max_message_size),
-        ]
-        channel = grpc.insecure_channel(
+        channel = create_grpc_channel(
             server_uri,
-            options=channel_options
+            use_ssl=use_ssl,
+            use_authenticator=use_authenticator,
+            root_certificate=root_certificate,
+            authenticator=authenticator,
+            authenticator_args=authenticator_args,
+            max_message_size=max_message_size,
         )
         grpc.channel_ready_future(channel).result(timeout=60)
         self.stub = GRPCCommunicatorStub(channel)

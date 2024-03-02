@@ -4,12 +4,15 @@ Adopted from https://github.com/grpc/grpc/blob/master/examples/python/auth/_cred
 """
 
 import os
+from .utils import load_credential_from_file
 
-def _load_credential_from_file(filepath):
-    real_path = os.path.join(os.path.dirname(__file__), filepath)
-    with open(real_path, "rb") as f:
-        return f.read()
-
-SERVER_CERTIFICATE = _load_credential_from_file("credentials/server_cert.pem")
-SERVER_CERTIFICATE_KEY = _load_credential_from_file("credentials/server_key.pem")
-ROOT_CERTIFICATE = _load_credential_from_file("credentials/root_cert.pem")
+current_path = os.path.dirname(__file__)
+SERVER_CERTIFICATE = load_credential_from_file(
+    os.path.join(current_path, "credentials/localhost.crt")
+)
+SERVER_CERTIFICATE_KEY = load_credential_from_file(
+    os.path.join(current_path, "credentials/localhost.key")
+)
+ROOT_CERTIFICATE = load_credential_from_file(
+    os.path.join(current_path, "credentials/root.crt")
+)

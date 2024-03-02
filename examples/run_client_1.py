@@ -9,8 +9,7 @@ client_agent_config = OmegaConf.load("config/client_1.yaml")
 client_agent = APPFLClientAgent(client_agent_config=client_agent_config)
 client_comm = GRPCClientCommunicator(
     client_id = client_agent.get_id(),
-    server_uri = 'localhost:50051',
-    max_message_size=max_message_size,
+    **client_agent_config.comm_configs,
 )
 
 client_config = client_comm.get_configuration()
