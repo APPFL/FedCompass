@@ -33,7 +33,8 @@ def serve(
     :param use_authenticator: Whether to use an authenticator to authenticate the client in each RPC. Must have `use_ssl=True` if `True`.
     :param server_certificate_key: The PEM-encoded server certificate key as a byte string, or `None` to use an insecure server.
     :param server_certificate: The PEM-encoded server certificate as a byte string, or `None` to use an insecure server.
-    :param authenticator: The authenticator to use for authenticating the client in each RPC.
+    :param authenticator: The name of the authenticator to use for authenticating the client in each RPC.
+    :param authenticator_args: The arguments to pass to the authenticator.
     :param max_message_size: The maximum message size in bytes.
     :param max_workers: The maximum number of workers to use for the server.
     """

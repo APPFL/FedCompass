@@ -26,8 +26,16 @@ class GRPCClientCommunicator:
         **kwargs,
     ):
         """
-        Create a channel to the server and initialize the gRPC stub.
-        TODO: When merging with the main branch, we need to use the channel auxiliar function to create the channel. Now we just create an insecure channel.
+        Create a channel to the server and initialize the gRPC client stub.
+        
+        :param client_id: A unique client ID.
+        :param server_uri: The URI of the server to connect to.
+        :param use_ssl: Whether to use SSL/TLS to authenticate the server and encrypt communicated data.
+        :param use_authenticator: Whether to use an authenticator to authenticate the client in each RPC. Must have `use_ssl=True` if `True`.
+        :param root_certificate: The PEM-encoded root certificates as a byte string, or `None` to retrieve them from a default location chosen by gRPC runtime.
+        :param authenticator: The name of the authenticator to use for authenticating the client in each RPC.
+        :param authenticator_args: The arguments to pass to the authenticator.
+        :param max_message_size: The maximum message size in bytes.
         """
         self.client_id = client_id
         self.max_message_size = max_message_size

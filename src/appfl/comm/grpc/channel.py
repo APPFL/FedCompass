@@ -26,7 +26,8 @@ def create_grpc_channel(
     :param use_ssl: Whether to use SSL/TLS to authenticate the server and encrypt communicated data.
     :param use_authenticator: Whether to use an authenticator to authenticate the client in each RPC. Must have `use_ssl=True` if `True`.
     :param root_certificate: The PEM-encoded root certificates as a byte string, or `None` to retrieve them from a default location chosen by gRPC runtime.
-    :param authenticator: The authenticator to use for authenticating the client in each RPC.
+    :param authenticator: The name of the authenticator to use for authenticating the client in each RPC.
+    :param authenticator_args: The arguments to pass to the authenticator.
     :param max_message_size: The maximum message size in bytes.
     :return: The created gRPC channel.
     """
