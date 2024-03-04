@@ -34,17 +34,26 @@ class NaiveTrainer(BaseTrainer):
 
         self.model.to(self.train_configs.get("device", "cpu"))
         do_validation = self.train_configs.get("do_validation", False) and self.val_dataloader is not None
+        do_pre_validation = self.train_configs.get("do_pre_validation", False) and do_validation
         
         # Set up logging title
         if self.round == 0:
             title = (
-                ["Round", "Time", "Train Loss", "Train Accuracy"] 
+                ["Round", "Pre Val?" "Time", "Train Loss", "Train Accuracy"] 
                 if not do_validation
-                else ["Round", "Time", "Train Loss", "Train Accuracy", "Val Loss", "Val Accuracy"]
+                else (
+                    ["Round", "Pre Val?", "Time", "Train Loss", "Train Accuracy", "Val Loss", "Val Accuracy"] 
+                    if do_pre_validation 
+                    else ["Round", "Time", "Train Loss", "Train Accuracy", "Val Loss", "Val Accuracy"]
+                )
             )
             if self.train_configs.mode == "epoch":
                 title.insert(1, "Epoch")
             self.logger.log_title(title)
+
+        if do_pre_validation:
+            val_loss, val_accuracy = self._validate()
+            self.logger.log_content([self.round, "Y", " ", " ", " ", val_loss, val_accuracy])
         
         # Start training
         optim_module = importlib.import_module("torch.optim")
@@ -68,7 +77,12 @@ class NaiveTrainer(BaseTrainer):
                 self.logger.log_content(
                     [self.round, epoch, per_epoch_time, train_loss, train_accuracy] 
                     if not do_validation
-                    else [self.round, epoch, per_epoch_time, train_loss, train_accuracy, val_loss, val_accuracy]
+                    else (
+                        [self.round, epoch, per_epoch_time, train_loss, train_accuracy, val_loss, val_accuracy] 
+                        if not do_pre_validation 
+                        else 
+                        [self.round, epoch, 'N', per_epoch_time, train_loss, train_accuracy, val_loss, val_accuracy]
+                    )
                 )
         else:
             start_time = time.time()
@@ -93,7 +107,12 @@ class NaiveTrainer(BaseTrainer):
             self.logger.log_content(
                 [self.round, per_step_time, train_loss, train_accuracy] 
                 if not do_validation
-                else [self.round, per_step_time, train_loss, train_accuracy, val_loss, val_accuracy]
+                else (
+                    [self.round, per_step_time, train_loss, train_accuracy, val_loss, val_accuracy]
+                    if not do_pre_validation 
+                    else 
+                    [self.round, 'N', per_step_time, train_loss, train_accuracy, val_loss, val_accuracy]
+                )
             )
 
         self.round += 1
