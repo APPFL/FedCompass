@@ -13,8 +13,12 @@ data_configs:
   dataloader_kwargs:
     num_clients: 2
     client_id: 1
+    partition_strategy: "class_noniid"
     train_batch_size: 64
     test_batch_size: 64
+    visualization: True
+    output_dirname: "./output"
+    output_filename: "visualization.pdf"
 
 comm_configs:
   server_uri: localhost:50051

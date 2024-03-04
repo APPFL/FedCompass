@@ -5,14 +5,15 @@ client_configs:
     mode: "step"
     num_local_steps: 100
     num_global_epochs: 5
-    optim: "SGD"
+    optim: "Adam"
     optim_args:
-      lr: 0.01
+      lr: 0.001
     # Loss function
     loss_fn_path: "./loss/celoss.py"
     loss_fn_name: "CELoss"
     # Client validation
     do_validation: True
+    do_pre_validation: True
     metric_path: "./metric/acc.py"
     metric_name: "accuracy"
     # Differential privacy

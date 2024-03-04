@@ -173,3 +173,23 @@ def get_function_from_file_source(source, function_name):
     os.remove(file_path)
 
     return function
+
+def get_unique_filename(
+    dirname: str,
+    filename: str,
+):
+    """
+    Create the directory (if needed) and get a unique filename by appending a number to the filename.
+    :param dirname: The directory where the file is located.
+    :param filename: The original filename.
+    :return dirname, unique_filename: The directory and the unique filename.
+    """
+    if not osp.exists(dirname):
+        pathlib.Path(dirname).mkdir(parents=True, exist_ok=True)
+    unique = 1
+    unique_filename = filename
+    filename_base, ext = osp.splitext(filename)
+    while pathlib.Path(osp.join(dirname, unique_filename)).exists():
+        unique_filename = f"{filename_base}_{unique}{ext}"
+        unique += 1
+    return dirname, unique_filename

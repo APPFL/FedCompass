@@ -41,7 +41,6 @@ class APPFLClientAgent:
         self._load_model()
         self._load_loss()
         self._load_metric()
-        self._load_data()
         self._load_trainer()
 
     def get_id(self) -> str:
