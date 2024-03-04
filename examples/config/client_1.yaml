@@ -6,16 +6,14 @@ train_configs:
   logging_output_dirname: "./output"
   logging_output_filename: "result"
 
-# Local dataloader
+# Local dataset
 data_configs:
-  dataloader_path: "./dataloader/mnist_dataloader.py"
-  dataloader_name: "get_mnist"
-  dataloader_kwargs:
+  dataset_path: "./dataset/mnist_dataset.py"
+  dataset_name: "get_mnist"
+  dataset_kwargs:
     num_clients: 2
     client_id: 0
     partition_strategy: "class_noniid"
-    train_batch_size: 64
-    test_batch_size: 64
     visualization: True
     output_dirname: "./output"
     output_filename: "visualization.pdf"

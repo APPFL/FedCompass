@@ -4,12 +4,11 @@ import pathlib
 import torchvision
 import numpy as np
 import matplotlib.pyplot as plt
+import torchvision.transforms as transforms
 from appfl.config import *
 from torch.utils import data
-from appfl.misc.data import Dataset
-from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
 from typing import List, Optional
+from appfl.misc.data import Dataset
 
 def plot_distribution(
     num_clients: int, 
@@ -297,8 +296,6 @@ def get_mnist(
     num_clients: int,
     client_id: int,
     partition_strategy: str = "iid",
-    train_batch_size: int = 64,
-    test_batch_size: int = 64,
     **kwargs
 ):
     """
@@ -332,19 +329,5 @@ def get_mnist(
         train_datasets = dirichlet_noniid_partition(train_data_raw, num_clients, **kwargs)
     else:
         raise ValueError(f"Invalid partition strategy: {partition_strategy}")
-    train_dataloader = DataLoader(
-        train_datasets[client_id],
-        batch_size=train_batch_size,
-        shuffle=True,
-        num_workers=0,
-        pin_memory=True,
-    ) 
-    test_dataloader = DataLoader(
-        test_dataset,
-        num_workers=0,
-        batch_size=test_batch_size,
-        shuffle=False,
-        pin_memory=True,
-    )
     
-    return train_dataloader, test_dataloader
+    return train_datasets[client_id], test_dataset

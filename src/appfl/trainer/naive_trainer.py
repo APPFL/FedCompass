@@ -3,8 +3,11 @@ import time
 import torch
 import importlib
 import numpy as np
-from typing import Tuple, Dict
-from .base_trainer import BaseTrainer
+from torch.nn import Module
+from omegaconf import DictConfig
+from typing import Tuple, Dict, Optional, Any
+from torch.utils.data import Dataset, DataLoader
+from appfl.trainer.base_trainer import BaseTrainer
 from appfl.privacy import laplace_mechanism_output_perturb
 
 class NaiveTrainer(BaseTrainer):
@@ -15,6 +18,41 @@ class NaiveTrainer(BaseTrainer):
         Users need to specify which training model to use in the configuration, 
         as well as the number of local epochs or steps.
     """  
+    def __init__(
+        self,
+        model: Optional[Module]=None,
+        loss_fn: Optional[Module]=None,
+        metric: Optional[Any]=None,
+        train_dataset: Optional[Dataset]=None,
+        val_dataset: Optional[Dataset]=None,
+        train_configs: DictConfig = DictConfig({}),
+        logger: Optional[Any]=None,
+        **kwargs
+    ):
+        super().__init__(
+            model=model,
+            loss_fn=loss_fn,
+            metric=metric,
+            train_dataset=train_dataset,
+            val_dataset=val_dataset,
+            train_configs=train_configs,
+            logger=logger,
+            **kwargs
+        )
+        self.train_dataloader = DataLoader(
+            self.train_dataset,
+            batch_size=self.train_configs.get("train_batch_size", 32),
+            shuffle=self.train_configs.get("train_data_shuffle", True),
+            num_workers=self.train_configs.get("num_workers", 0),
+        )
+        self.val_dataloader = DataLoader(
+            self.val_dataset,
+            batch_size=self.train_configs.get("val_batch_size", 32),
+            shuffle=self.train_configs.get("val_data_shuffle", False),
+            num_workers=self.train_configs.get("num_workers", 0),
+        ) if self.val_dataset is not None else None
+
+        
     def train(self):
         """
         Train the model for a certain number of local epochs or steps and store the mode state

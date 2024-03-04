@@ -82,10 +82,10 @@ class APPFLClientAgent:
 
     def _load_data(self) -> None:
         """Get train and validation dataloaders from local dataloader file."""
-        self.train_dataloader, self.val_dataloader = run_function_from_file(
-            self.client_agent_config.data_configs.dataloader_path,
-            self.client_agent_config.data_configs.dataloader_name,
-            **self.client_agent_config.data_configs.dataloader_kwargs
+        self.train_dataset, self.val_dataset = run_function_from_file(
+            self.client_agent_config.data_configs.dataset_path,
+            self.client_agent_config.data_configs.dataset_name,
+            **self.client_agent_config.data_configs.dataset_kwargs
         )
 
     def _load_model(self) -> None:
@@ -187,8 +187,8 @@ class APPFLClientAgent:
             model=self.model, 
             loss_fn=self.loss_fn,
             metric=self.metric,
-            train_dataloader=self.train_dataloader, 
-            val_dataloader=self.val_dataloader,
+            train_dataset=self.train_dataset, 
+            val_dataset=self.val_dataset,
             train_configs=self.client_agent_config.train_configs,
             logger=self.logger,
         )
