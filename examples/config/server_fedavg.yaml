@@ -56,12 +56,12 @@ server_configs:
     server_uri: localhost:50051
     max_message_size: 1048576
 
-    # use_ssl: False
-    # SSL configurations
-    use_ssl: True
-    use_authenticator: True
-    server_certificate_key: ../src/appfl/comm/grpc/credentials/localhost.key
-    server_certificate: ../src/appfl/comm/grpc/credentials/localhost.crt
-    authenticator: NaiveAuthenticator
-    authenticator_args:
-      auth_token: a-secret-token
+    use_ssl: False
+    # # SSL configurations
+    # use_ssl: True
+    # use_authenticator: True
+    # server_certificate_key: ../src/appfl/comm/grpc/credentials/localhost.key
+    # server_certificate: ../src/appfl/comm/grpc/credentials/localhost.crt
+    # authenticator: NaiveAuthenticator
+    # authenticator_args:
+    #   auth_token: a-secret-token
