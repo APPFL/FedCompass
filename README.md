@@ -5,6 +5,9 @@
 
 
 <p align="center">
+  <a href="https://discord.com/invite/bBW56EYGUS">
+      <img src="https://dcbadge.vercel.app/api/server/bBW56EYGUS?theme=default-inverted&style=flat" alt="discord">
+  </a>
   <a href="https://arxiv.org/abs/2309.14675">
       <img src="https://img.shields.io/badge/arXiv-2309.14675-B31B1B.svg" alt="paper">
   </a>
