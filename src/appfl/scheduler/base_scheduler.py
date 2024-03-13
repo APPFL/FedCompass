@@ -34,7 +34,11 @@ class BaseScheduler:
         :params `kwargs['init_model']` (default is `True`): whether to get the initial global model or not
         :return the global model or a `Future` object for the global model
         """
-        if kwargs.get("init_model", True) and self.scheduler_configs.get("same_init_model", True):
+        if (
+            kwargs.get("init_model", True) 
+            and self.scheduler_configs.get("same_init_model", True) 
+            and (not kwargs.get("serial_run", False))
+        ):
             if not hasattr(self, "init_model_requests"):
                 self.init_model_requests = 0
                 self.init_model_futures = []
