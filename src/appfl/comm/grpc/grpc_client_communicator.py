@@ -136,4 +136,10 @@ class GRPCClientCommunicator:
         response = self.stub.InvokeCustomAction(request)
         if response.header.status == ServerStatus.ERROR:
             raise Exception("Server returned an error, stopping the client.")
-        return json.loads(response.response)
+        if len(response.results) == 0:
+            return {}
+        else:
+            try:
+                return json.loads(response.results)
+            except:
+                return {}

@@ -29,8 +29,8 @@ class GRPCCommunicatorStub(object):
                 request_serializer=grpc__communicator__pb2.DataBuffer.SerializeToString,
                 response_deserializer=grpc__communicator__pb2.DataBuffer.FromString,
                 )
-        self.CustomAction = channel.unary_unary(
-                '/GRPCCommunicator/CustomAction',
+        self.InvokeCustomAction = channel.unary_unary(
+                '/GRPCCommunicator/InvokeCustomAction',
                 request_serializer=grpc__communicator__pb2.CustomActionRequest.SerializeToString,
                 response_deserializer=grpc__communicator__pb2.CustomActionResponse.FromString,
                 )
@@ -57,7 +57,7 @@ class GRPCCommunicatorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def CustomAction(self, request, context):
+    def InvokeCustomAction(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -81,8 +81,8 @@ def add_GRPCCommunicatorServicer_to_server(servicer, server):
                     request_deserializer=grpc__communicator__pb2.DataBuffer.FromString,
                     response_serializer=grpc__communicator__pb2.DataBuffer.SerializeToString,
             ),
-            'CustomAction': grpc.unary_unary_rpc_method_handler(
-                    servicer.CustomAction,
+            'InvokeCustomAction': grpc.unary_unary_rpc_method_handler(
+                    servicer.InvokeCustomAction,
                     request_deserializer=grpc__communicator__pb2.CustomActionRequest.FromString,
                     response_serializer=grpc__communicator__pb2.CustomActionResponse.SerializeToString,
             ),
@@ -148,7 +148,7 @@ class GRPCCommunicator(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def CustomAction(request,
+    def InvokeCustomAction(request,
             target,
             options=(),
             channel_credentials=None,
@@ -158,7 +158,7 @@ class GRPCCommunicator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/GRPCCommunicator/CustomAction',
+        return grpc.experimental.unary_unary(request, target, '/GRPCCommunicator/InvokeCustomAction',
             grpc__communicator__pb2.CustomActionRequest.SerializeToString,
             grpc__communicator__pb2.CustomActionResponse.FromString,
             options, channel_credentials,

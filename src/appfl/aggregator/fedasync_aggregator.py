@@ -12,7 +12,7 @@ class FedAsyncAggregator(BaseAggregator):
         logger: Any
     ):
         self.model = model
-        self.client_weights = aggregator_config.get("client_weights", "equal")
+        self.client_weights_mode = aggregator_config.get("client_weights_mode", "equal")
         self.aggregator_config = aggregator_config
         self.logger = logger
 
@@ -32,7 +32,14 @@ class FedAsyncAggregator(BaseAggregator):
             self.client_step[client_id] = 0
         gradient_based = self.aggregator_config.get("gradient_based", False)
         global_state = copy.deepcopy(self.model.state_dict())
-        weight = self.client_weights[client_id] if isinstance(self.client_weights, dict) else 1.0 / self.aggregator_config.get("num_clients", 1)
+        if (
+            self.client_weights_mode == "sample_size" and
+            hasattr(self, "client_sample_size") and
+            client_id in self.client_sample_size
+        ):
+            weight = self.client_sample_size[client_id] / sum(self.client_sample_size.values())
+        else:
+            weight = 1.0 / self.aggregator_config.get("num_clients", 1)
         alpha_t = self.alpha * self.staleness_fn(self.global_step - self.client_step[client_id]) * weight
         for name in self.model.state_dict():
             if name in self.named_parameters:

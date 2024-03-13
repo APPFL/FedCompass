@@ -16,9 +16,8 @@ class FedCompassAggregator(BaseAggregator):
         logger: Any
     ):
         self.model = model
-        self.client_weights = aggregator_config.get("client_weights", "equal")
-        self.aggregator_config = aggregator_config
         self.logger = logger
+        self.aggregator_config = aggregator_config
         self.staleness_fn = self.__staleness_fn_factory(
             staleness_fn_name= self.aggregator_config.get("staleness_fn", "constant"),
             **self.aggregator_config.get("staleness_fn_kwargs", {})
@@ -40,11 +39,7 @@ class FedCompassAggregator(BaseAggregator):
         global_state = copy.deepcopy(self.model.state_dict())
         gradient_based = self.aggregator_config.get("gradient_based", False)
         if client_id is not None and local_model is not None:
-            weight = (
-                self.client_weights[client_id] 
-                if isinstance(self.client_weights, dict) 
-                else 1.0 / self.aggregator_config.get("num_clients", 1)
-            )
+            weight = 1.0 / self.aggregator_config.get("num_clients", 1)
             alpha_t = self.alpha * self.staleness_fn(staleness) * weight
             for name in self.model.state_dict():
                 if name in self.named_parameters:
@@ -57,11 +52,7 @@ class FedCompassAggregator(BaseAggregator):
         else:
             for i, client_id in enumerate(local_models):
                 local_model = local_models[client_id]
-                weight = (
-                    self.client_weights[client_id] 
-                    if isinstance(self.client_weights, dict) 
-                    else 1.0 / self.aggregator_config.get("num_clients", 1)
-                )
+                weight = 1.0 / self.aggregator_config.get("num_clients", 1)
                 alpha_t = self.alpha * self.staleness_fn(staleness[client_id]) * weight
                 for name in self.model.state_dict():
                     if name in self.named_parameters:

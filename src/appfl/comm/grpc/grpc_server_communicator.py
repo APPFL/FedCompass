@@ -1,10 +1,8 @@
 import io
-import grpc
 import json
 import torch
 import logging
 from typing import Optional
-from concurrent import futures
 from omegaconf import OmegaConf
 from .grpc_communicator_pb2 import *
 from .grpc_communicator_pb2_grpc import *
@@ -110,7 +108,7 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         for bytes in proto_to_databuffer(response, max_message_size=self.max_message_size):
             yield bytes
     
-    def CustomAction(self, request, context):
+    def InvokeCustomAction(self, request, context):
         """
         This function is the entry point for any custom action that the server agent can perform. The server agent should implement the custom action and call this function to perform the action.
         :param: `request.header.client_id`: A unique client ID
@@ -119,19 +117,23 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         :return `response.header.status`: Server status
         :return `response.meta_data`: JSON serialized metadata dictionary for return values (if needed)
         """
-        self.logger.info(f"Received CustomAction {request.action} request from client {request.header.client_id}")
+        self.logger.info(f"Received InvokeCustomAction {request.action} request from client {request.header.client_id}")
         client_id = request.header.client_id
         action = request.action
         if len(request.meta_data) == 0: 
             meta_data = {}
         else:
             meta_data = json.loads(request.meta_data)
-        self.logger.info(f"[DEBUG] - {meta_data} - {action} - {client_id}")
-        response = CustomActionResponse(
-            header=ServerHeader(status=ServerStatus.RUN),
-            meta_data=json.dumps({"TEST": "TEST"}),
-        )
-        return response
+        if action == "set_sample_size":
+            assert "sample_size" in meta_data, "The metadata should contain parameter `sample_size`."
+            datasize = meta_data['sample_size']
+            self.server_agent.set_sample_size(client_id, datasize)
+            response = CustomActionResponse(
+                header=ServerHeader(status=ServerStatus.RUN),
+            )
+            return response
+        else:
+            raise NotImplementedError(f"Custom action {action} is not implemented.")
     
     def _default_logger(self):
         """Create a default logger for the gRPC server if no logger provided."""
@@ -143,23 +145,3 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         s_handler.setFormatter(fmt)
         logger.addHandler(s_handler)
         return logger
-
-# def serve(servicer, max_message_size=2 * 1024 * 1024, server_uri="localhost:50051"):
-#     server = grpc.server(
-#         futures.ThreadPoolExecutor(max_workers=10),
-#         options=[
-#             ("grpc.max_send_message_length", max_message_size),
-#             ("grpc.max_receive_message_length", max_message_size),
-#         ],
-#     )
-#     add_GRPCCommunicatorServicer_to_server(
-#         servicer, server
-#     )
-#     server.add_insecure_port(server_uri)
-#     server.start()
-#     try:
-#         server.wait_for_termination()
-#     except KeyboardInterrupt:
-#         logger = logging.getLogger(__name__)
-#         logger.info("Terminating the server ...")
-#         return

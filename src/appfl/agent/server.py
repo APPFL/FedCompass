@@ -62,6 +62,14 @@ class APPFLServerAgent:
             return global_model
         else:
             return global_model.result()
+        
+    def set_sample_size(
+            self, 
+            client_id: Union[int, str],
+            sample_size: int,
+        ) -> None:
+        """Set the size of the local dataset of a client."""
+        self.aggregator.set_client_sample_size(client_id, sample_size)
 
     def _create_logger(self) -> None:
         kwargs = {}
@@ -131,13 +139,13 @@ class APPFLServerAgent:
 
     def _get_scheduler(self) -> None:
         """Obtain the scheduler."""
-        self._aggregator: BaseAggregator = eval(self.server_agent_config.server_configs.aggregator)(
+        self.aggregator: BaseAggregator = eval(self.server_agent_config.server_configs.aggregator)(
             self.model,
             OmegaConf.create(self.server_agent_config.server_configs.aggregator_kwargs),
             self.logger,
         )
         self.scheduler: BaseScheduler = eval(self.server_agent_config.server_configs.scheduler)(
             OmegaConf.create(self.server_agent_config.server_configs.scheduler_kwargs),
-            self._aggregator,
+            self.aggregator,
             self.logger,
         )
