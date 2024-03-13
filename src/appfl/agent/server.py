@@ -22,6 +22,13 @@ class APPFLServerAgent:
         server_agent_config: ServerAgentConfig = ServerAgentConfig()
     ) -> None:
         self.server_agent_config = server_agent_config
+        if hasattr(self.server_agent_config.client_configs, "comm_configs"):
+            self.server_agent_config.server_configs.comm_configs = (OmegaConf.merge(
+                self.server_agent_config.server_configs.comm_configs,
+                self.server_agent_config.client_configs.comm_configs
+            ) if hasattr(self.server_agent_config.server_configs, "comm_configs") 
+            else self.server_agent_config.client_configs.comm_configs
+            )
         self._create_logger()
         self._load_model()
         self._load_loss()

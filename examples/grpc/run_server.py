@@ -17,10 +17,10 @@ server_agent = APPFLServerAgent(server_agent_config=server_agent_config)
 
 communicator = GRPCServerCommunicator(
     server_agent,
-    max_message_size=server_agent_config.server_configs.comm_configs.max_message_size,
+    max_message_size=server_agent_config.server_configs.comm_configs.grpc_configs.max_message_size,
 )
 
 serve(
     communicator,
-    **server_agent_config.server_configs.comm_configs,
+    **server_agent_config.server_configs.comm_configs.grpc_configs,
 )

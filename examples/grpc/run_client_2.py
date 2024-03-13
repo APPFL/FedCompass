@@ -9,7 +9,7 @@ client_agent_config = OmegaConf.load("config/client_2.yaml")
 client_agent = APPFLClientAgent(client_agent_config=client_agent_config)
 client_comm = GRPCClientCommunicator(
     client_id = client_agent.get_id(),
-    **client_agent_config.comm_configs,
+    **client_agent_config.comm_configs.grpc_configs,
 )
 
 client_config = client_comm.get_configuration()

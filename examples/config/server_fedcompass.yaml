@@ -39,7 +39,15 @@ client_configs:
       num_pixel: 28
   
   comm_configs:
-    enable_compression: False
+    compression_configs:
+      enable_compression: False
+      # Used if enable_compression is True
+      lossy_compressor:  "SZ2"
+      lossless_compressor: "blosc"
+      error_bounding_mode: "REL"
+      error_bound: 1e-3
+      flat_model_dtype: "np.float32"
+      param_cutoff: 1024
 
 server_configs:
   scheduler: "CompassScheduler"
@@ -65,6 +73,7 @@ server_configs:
   logging_output_dirname: "./output"
   logging_output_filename: "result"
   comm_configs:
-    server_uri: localhost:50051
-    max_message_size: 1048576
-    use_ssl: False
+    grpc_configs:
+      server_uri: localhost:50051
+      max_message_size: 1048576
+      use_ssl: False
