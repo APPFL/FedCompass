@@ -16,12 +16,16 @@ class APPFLClientAgent:
     """
     The `APPFLClientAgent` should act on behalf of the FL client to:
     - load configurations received from the server `APPFLClientAgent.load_config`
+    - get the size of the local dataset `APPFLClientAgent.get_sample_size`
     - do the local training job using configurations `APPFLClientAgent.train`
     - prepare data for communication `APPFLClientAgent.get_parameters`
     - load parameters from the server `APPFLClientAgent.load_parameters`
     - get a unique client id for server to distinguish clients `APPFLClientAgent.get_id`
 
-    User can overwrite any class method to customize the behavior of the client agent.
+    Developers can add new methods to the client agent to support more functionalities,
+    and use Fork + Pull Request to contribute to the project.
+
+    Users can overwrite any class method to add custom functionalities of the client agent.
     """
     def __init__(
         self, 
@@ -48,6 +52,10 @@ class APPFLClientAgent:
         if not hasattr(self, 'client_id'):
             self.client_id = str(uuid.uuid4())
         return self.client_id
+    
+    def get_sample_size(self) -> int:
+        """Return the size of the local dataset."""
+        return len(self.train_dataset)
 
     def train(self) -> None:
         """Train the model locally."""
