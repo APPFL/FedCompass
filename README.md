@@ -36,7 +36,7 @@ pip install -e .
 ### 🚀 Launch First Example Experiment
 Please go to the `examples` folder first. To launch a server, users can run the following command, 
 ```bash
-python run_server.py --config config/server_fedcompass.yaml
+python grpc/run_server.py --config config/server_fedcompass.yaml
 ```
 where `--config` is the path to the configuration file. We currently provide three configuration files for the FL server, corresponding to three different FL algorithms
 - `config/server_fedcompass.yaml`: FL server for the FedCompass algorithm
@@ -45,10 +45,10 @@ where `--config` is the path to the configuration file. We currently provide thr
 
 The above command launches an FL server at `localhost:50051` waiting for connection from two FL clients. To launch two FL clients, open two separate terminals and go to the `examples` folder, and run the following two commands, respectively. This will help you start an FL experiment with two clients and a server running the specified algorithm.
 ```bash
-python run_client_1.py
+python grpc/run_client_1.py
 ```
 ```bash
-python run_client_2.py
+python grpc/run_client_2.py
 ```
 
 
