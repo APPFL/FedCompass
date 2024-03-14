@@ -93,7 +93,7 @@ class GRPCClientCommunicator:
         else:
             return model, meta_data
 
-    def update_global_model(self, local_model: Union[Dict, OrderedDict], **kwargs) -> Union[Union[Dict, OrderedDict], Tuple[Union[Dict, OrderedDict], Dict]]:
+    def update_global_model(self, local_model: Union[Dict, OrderedDict, bytes], **kwargs) -> Union[Union[Dict, OrderedDict], Tuple[Union[Dict, OrderedDict], Dict]]:
         """
         Send local model to FL server for global update, and return the new global model.
         :param local_model: the local model to be sent to the server for gloabl aggregation
@@ -103,7 +103,7 @@ class GRPCClientCommunicator:
         meta_data = json.dumps(kwargs)
         request = UpdateGlobalModelRequest(
             header=ClientHeader(client_id=self.client_id),
-            local_model=serialize_model(local_model),
+            local_model=serialize_model(local_model) if not isinstance(local_model, bytes) else local_model,
             meta_data=meta_data,
         )
         byte_received = b''

@@ -2,9 +2,10 @@ import uuid
 import importlib
 import torch.nn as nn
 from appfl.trainer import BaseTrainer
+from appfl.compressor import Compressor
 from appfl.config import ClientAgentConfig
 from omegaconf import DictConfig, OmegaConf
-from typing import Union, Dict, OrderedDict
+from typing import Union, Dict, OrderedDict, Tuple
 from appfl.logger import ClientAgentFileLogger
 from appfl.misc import create_instance_from_file, \
     run_function_from_file, \
@@ -38,6 +39,7 @@ class APPFLClientAgent:
         self._load_metric()
         self._load_data()
         self._load_trainer()
+        self._load_compressor()
 
     def load_config(self, config: DictConfig) -> None:
         """Load additional configurations provided by the server."""
@@ -46,6 +48,7 @@ class APPFLClientAgent:
         self._load_loss()
         self._load_metric()
         self._load_trainer()
+        self._load_compressor()
 
     def get_id(self) -> str:
         """Return a unique client id for server to distinguish clients."""
@@ -61,10 +64,16 @@ class APPFLClientAgent:
         """Train the model locally."""
         self.trainer.train()
 
-    def get_parameters(self) -> Union[Dict, OrderedDict, bytes]:
+    def get_parameters(self) -> Union[Dict, OrderedDict, bytes, Tuple[Union[Dict, OrderedDict, bytes], Dict]]:
         """Return parameters for communication"""
         params = self.trainer.get_parameters()
-        return params
+        if isinstance(params, tuple):
+            params, metadata = params
+        else:
+            metadata = None
+        if self.enable_compression:
+            params = self.compressor.compress_model(params)
+        return params if metadata is None else (params, metadata)
     
     def load_parameters(self, params) -> None:
         """Load parameters from the server."""
@@ -200,4 +209,21 @@ class APPFLClientAgent:
             train_configs=self.client_agent_config.train_configs,
             logger=self.logger,
         )
-    
+
+    def _load_compressor(self) -> None:
+        """
+        Create a compressor for compressing the model parameters.
+        """
+        if hasattr(self, "compressor") and self.compressor is not None:
+            return
+        self.compressor = None
+        self.enable_compression = False
+        if not hasattr(self.client_agent_config, "comm_configs"):
+            return
+        if not hasattr(self.client_agent_config.comm_configs, "compressor_configs"):
+            return
+        if getattr(self.client_agent_config.comm_configs.compressor_configs, "enable_compression", False):
+            self.enable_compression = True
+            self.compressor = Compressor(
+               self.client_agent_config.comm_configs.compressor_configs
+            )

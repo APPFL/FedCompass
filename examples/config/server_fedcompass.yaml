@@ -39,7 +39,7 @@ client_configs:
       num_pixel: 28
   
   comm_configs:
-    compression_configs:
+    compressor_configs:
       enable_compression: False
       # Used if enable_compression is True
       lossy_compressor:  "SZ2"
