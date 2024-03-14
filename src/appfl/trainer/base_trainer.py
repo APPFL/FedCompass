@@ -2,7 +2,7 @@ import abc
 import torch.nn as nn
 from omegaconf import DictConfig
 from torch.utils.data import Dataset
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, Union, OrderedDict
 
 class BaseTrainer:
     """
@@ -39,8 +39,8 @@ class BaseTrainer:
         self.__dict__.update(kwargs)
 
     @abc.abstractmethod
-    def get_parameters(self) -> Dict:
-        """Return local model parameters"""
+    def get_parameters(self) -> Union[Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
+        """Return local model parameters and optional metadata."""
         pass
 
     @abc.abstractmethod

@@ -9,7 +9,7 @@ client_agent_config = OmegaConf.load("config/client_1.yaml")
 client_agent = APPFLClientAgent(client_agent_config=client_agent_config)
 client_comm = GRPCClientCommunicator(
     client_id = client_agent.get_id(),
-    **client_agent_config.comm_configs,
+    **client_agent_config.comm_configs.grpc_configs,
 )
 
 client_config = client_comm.get_configuration()
@@ -20,7 +20,6 @@ client_agent.load_parameters(init_global_model)
 
 # Send the number of local data to the server
 sample_size = client_agent.get_sample_size()
-print(f"Sample size: {sample_size}")
 client_comm.invoke_custom_action(action='set_sample_size', sample_size=sample_size)
  
 for i in range(10):

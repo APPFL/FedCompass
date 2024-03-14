@@ -1,12 +1,15 @@
+import io
+import torch
 import torch.nn as nn
 from appfl.scheduler import *
 from appfl.aggregator import *
-from concurrent.futures import Future
+from appfl.compressor import Compressor
 from appfl.config import ServerAgentConfig
-from omegaconf import OmegaConf, DictConfig
-from appfl.logger import ServerAgentFileLogger
-from typing import Union, Dict, OrderedDict, Tuple
 from appfl.misc import create_instance_from_file, get_function_from_file
+from appfl.logger import ServerAgentFileLogger
+from concurrent.futures import Future
+from omegaconf import OmegaConf, DictConfig
+from typing import Union, Dict, OrderedDict, Tuple
 
 class APPFLServerAgent:
     """
@@ -22,11 +25,19 @@ class APPFLServerAgent:
         server_agent_config: ServerAgentConfig = ServerAgentConfig()
     ) -> None:
         self.server_agent_config = server_agent_config
+        if hasattr(self.server_agent_config.client_configs, "comm_configs"):
+            self.server_agent_config.server_configs.comm_configs = (OmegaConf.merge(
+                self.server_agent_config.server_configs.comm_configs,
+                self.server_agent_config.client_configs.comm_configs
+            ) if hasattr(self.server_agent_config.server_configs, "comm_configs") 
+            else self.server_agent_config.client_configs.comm_configs
+            )
         self._create_logger()
         self._load_model()
         self._load_loss()
         self._load_metric()
-        self._get_scheduler()
+        self._load_scheduler()
+        self._load_compressor()
 
     def get_client_configs(self, **kwargs) -> DictConfig:
         """Return the FL configurations that are shared among all clients."""
@@ -35,18 +46,20 @@ class APPFLServerAgent:
     def global_update(
             self, 
             client_id: Union[int, str],
-            local_model: Union[Dict, OrderedDict],
+            local_model: Union[Dict, OrderedDict, bytes],
             blocking: bool = False,
             **kwargs
         ) -> Union[Future, Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
         """
         Update the global model using the local model from a client and return the updated global model.
         :param: client_id: A unique client id for server to distinguish clients, which be obtained via `ClientAgent.get_id()`.
-        :param: local_model: The local model from a client.
+        :param: local_model: The local model from a client, can be serailzed bytes.
         :param: blocking: The global model may not be immediately available for certain aggregation methods (e.g. any synchronous method).
             Setting `blocking` to `True` will block the client until the global model is available. 
             Otherwise, the method may return a `Future` object if the most up-to-date global model is not yet available.
         """
+        if isinstance(local_model, bytes):
+            local_model = self._bytes_to_model(local_model)
         global_model = self.scheduler.schedule(client_id, local_model, **kwargs)
         if not isinstance(global_model, Future):
             return global_model
@@ -137,7 +150,7 @@ class APPFLServerAgent:
         else:
             self.metric = None
 
-    def _get_scheduler(self) -> None:
+    def _load_scheduler(self) -> None:
         """Obtain the scheduler."""
         self.aggregator: BaseAggregator = eval(self.server_agent_config.server_configs.aggregator)(
             self.model,
@@ -149,3 +162,26 @@ class APPFLServerAgent:
             self.aggregator,
             self.logger,
         )
+
+    def _load_compressor(self) -> None:
+        """Obtain the compressor."""
+        self.compressor = None
+        self.enable_compression = False
+        if not hasattr(self.server_agent_config.server_configs, "comm_configs"):
+            return
+        if not hasattr(self.server_agent_config.server_configs.comm_configs, "compressor_configs"):
+            return
+        if getattr(self.server_agent_config.server_configs.comm_configs.compressor_configs, "enable_compression", False):
+            self.enable_compression = True
+            self.compressor = Compressor(
+                self.server_agent_config.server_configs.comm_configs.compressor_configs
+            )
+
+    def _bytes_to_model(self, model_bytes: bytes) -> Union[Dict, OrderedDict]:
+        """Deserialize the model from bytes."""
+        if not self.enable_compression:
+            print("[DEBUG] Decompressing model without compression")
+            return torch.load(io.BytesIO(model_bytes))
+        else:
+            print("[DEBUG] Decompressing model with compression")
+            return self.compressor.decompress_model(model_bytes, self.model)

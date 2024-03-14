@@ -36,10 +36,17 @@ setuptools.setup(
         "matplotlib",
         "torchvision",
         "globus-sdk",
+        "zfpy",
+        "blosc",
+        "zstd",
+        "scipy",
+        "lz4",
+        "python-xz",
     ],
     entry_points={
         "console_scripts": [
             "appfl-auth=appfl.login_manager.globus.cli:auth",
+            "appfl-install-compressor=appfl.compressor.install:install_compressor",
         ],
     },
 )

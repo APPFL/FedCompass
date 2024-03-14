@@ -88,7 +88,7 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         request.ParseFromString(bytes_received)
         self.logger.info(f"Received UpdateGlobalModel request from client {request.header.client_id}")
         client_id = request.header.client_id
-        local_model = torch.load(io.BytesIO(request.local_model))
+        local_model = request.local_model
         if len(request.meta_data) == 0: 
             meta_data = {}
         else:
