@@ -1,6 +1,4 @@
-import io
 import json
-import torch
 import logging
 from typing import Optional
 from omegaconf import OmegaConf

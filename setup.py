@@ -36,6 +36,7 @@ setuptools.setup(
         "matplotlib",
         "torchvision",
         "globus-sdk",
+        "mpi4py",
         "zfpy",
         "blosc",
         "zstd",
