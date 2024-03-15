@@ -68,13 +68,19 @@ class APPFLServerAgent:
         else:
             return global_model # return the `Future` object
         
-    def get_parameters(self, **kwargs) -> Union[Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
+    def get_parameters(
+        self, 
+        blocking: bool = False,
+        **kwargs
+    ) -> Union[Future, Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
         """Return the global model to the clients."""
         global_model = self.scheduler.get_parameters(**kwargs)
         if not isinstance(global_model, Future):
             return global_model
+        if blocking:
+            return global_model.result() # blocking until the `Future` is done
         else:
-            return global_model.result()
+            return global_model # return the `Future` object
         
     def set_sample_size(
             self, 
@@ -180,8 +186,6 @@ class APPFLServerAgent:
     def _bytes_to_model(self, model_bytes: bytes) -> Union[Dict, OrderedDict]:
         """Deserialize the model from bytes."""
         if not self.enable_compression:
-            print("[DEBUG] Decompressing model without compression")
             return torch.load(io.BytesIO(model_bytes))
         else:
-            print("[DEBUG] Decompressing model with compression")
             return self.compressor.decompress_model(model_bytes, self.model)
