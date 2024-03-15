@@ -17,7 +17,23 @@
   <a href="https://appfl.github.io/FedCompass/">
       <img src="https://img.shields.io/badge/project-FedCompass-B3FFF4.svg" alt="project">
   </a>
+  <a href="./LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-green?style=flat&logo=github" alt="project">
+  </a>
 </p>
+
+<details>
+  <summary><b>Table of Contents</b></summary>
+  <p>
+
+- [Introduction](#🎙-introduction)
+- [Installation](#⚙️-installation)
+- [Launch Experiment](#🚀-launch-first-example-experiment)
+- [Features](#🔥-features)
+- [Citations](#📃-citation)
+
+  </p>
+</details>
 
 ### 🎙 Introduction
 FedCompass is a semi-asynchrnous federated learning (FL) algorithm which addresses the time-efficiency challenge of other synchronous FL algorithms, and the model performance challenge of other asynchronous FL algorithms (due to model stalenesses) by using a *COM*puting *P*ower *A*ware *Scheduler* *(COMPASS)* to adaptively assign different numbers of local steps to different FL clients and synchrnoize the arrival of client local models. 
@@ -51,6 +67,19 @@ python grpc/run_client_1.py
 python grpc/run_client_2.py
 ```
 
+### 🔥 Features
+
+- [x] Server scheduling algorithm customization
+- [x] Server aggregation algorithm customization
+- [x] Client local trainer customization
+- [x] Synchronous federated learning
+- [x] Asynchronous Federated Learning
+- [x] Semi-asynchronous federated learning
+- [x] Model and dataset customization
+- [x] Loss function and evaluation metric customization
+- [x] Data heterogeneity
+- [ ] wandb visualization
+- [ ] Support for leaf-related datasets
 
 ### 📃 Citation
 If you find FedCompass and this repository useful to your research, please consider cite the following paper
