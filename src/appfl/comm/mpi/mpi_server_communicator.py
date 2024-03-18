@@ -29,7 +29,7 @@ class MPIServerCommunicator:
         """
         self.logger.info(f"Server starting...")
         status = MPI.Status()
-        while True:
+        while not self.server_agent.server_terminated():
             self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
             source = status.Get_source()
             tag = status.Get_tag()
@@ -41,6 +41,7 @@ class MPIServerCommunicator:
             if response is not None:
                 response_bytes = response_to_byte(response)
                 self.comm.Send(response_bytes, dest=source, tag=source)
+        self.logger.info(f"Server terminated.")
 
     def _request_handler(
         self, 
@@ -104,7 +105,7 @@ class MPIServerCommunicator:
         """
         self.logger.info(f"Received GetGlobalModel request from client {client_id}")
         meta_data = json.loads(request.meta_data) if len(request.meta_data) > 0 else {}
-        model = self.server_agent.get_parameters(**meta_data)
+        model = self.server_agent.get_parameters(**meta_data, blocking=False)
         if not isinstance(model, Future):
             if isinstance(model, tuple):
                 model = model[0]
@@ -148,8 +149,9 @@ class MPIServerCommunicator:
             else:
                 meta_data = json.dumps({})
             global_model_serialized = model_to_byte(global_model)
+            status = MPIServerStatus.DONE.value if self.server_agent.training_finished() else MPIServerStatus.RUN.value
             return MPITaskResponse(
-                status=MPIServerStatus.RUN.value,
+                status=status,
                 payload=global_model_serialized,
                 meta_data=meta_data,
             )
@@ -194,8 +196,9 @@ class MPIServerCommunicator:
                 else:
                     meta_data = json.dumps({})
                 global_model_serialized = model_to_byte(global_model)
+                status = MPIServerStatus.DONE.value if self.server_agent.training_finished() else MPIServerStatus.RUN.value
                 response = MPITaskResponse(
-                    status=MPIServerStatus.RUN.value,
+                    status=status,
                     payload=global_model_serialized,
                     meta_data=meta_data,
                 )
