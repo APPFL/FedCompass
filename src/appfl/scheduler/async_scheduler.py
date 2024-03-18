@@ -11,6 +11,7 @@ class AsyncScheduler(BaseScheduler):
         logger: Any
     ):
         super().__init__(scheduler_configs, aggregator, logger)
+        self._num_global_epochs = 0
         self._access_lock = threading.Lock()
     
     def schedule(self, client_id: Union[int, str], local_model: Union[Dict, OrderedDict], **kwargs) -> Union[Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
@@ -23,4 +24,11 @@ class AsyncScheduler(BaseScheduler):
         :return: global_model: the aggregated model
         """
         with self._access_lock:
-            return self.aggregator.aggregate(client_id, local_model, **kwargs)
+            global_model = self.aggregator.aggregate(client_id, local_model, **kwargs)
+            self._num_global_epochs += 1
+        return global_model
+    
+    def get_num_global_epochs(self) -> int:
+        """Return the total number of global epochs for federated learning."""
+        with self._access_lock:
+            return self._num_global_epochs

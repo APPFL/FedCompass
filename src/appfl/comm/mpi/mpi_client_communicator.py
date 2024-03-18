@@ -58,12 +58,12 @@ class MPIClientCommunicator:
         else:
             return model, meta_data
         
-    def update_global_model(self, local_model: Union[Dict, OrderedDict, bytes], **kwargs) -> Union[Union[Dict, OrderedDict], Tuple[Union[Dict, OrderedDict], Dict]]:
+    def update_global_model(self, local_model: Union[Dict, OrderedDict, bytes], **kwargs) -> Tuple[Union[Dict, OrderedDict], Dict]:
         """
         Send local model to FL server for global update, and return the new global model.
         :param local_model: the local model to be sent to the server for gloabl aggregation
         :param kwargs: additional metadata to be sent to the server
-        :return: the updated global model with additional metadata (if any)
+        :return: the updated global model with additional metadata. Specifically, `meta_data["status"]` is either "RUNNING" or "DONE".
         """
         meta_data = json.dumps(kwargs)
         request = MPITaskRequest(
@@ -78,10 +78,9 @@ class MPIClientCommunicator:
             raise Exception("Server returned an error, stopping the client.")
         model = byte_to_model(response.payload)
         meta_data = json.loads(response.meta_data)
-        if len(meta_data) == 0:
-            return model
-        else:
-            return model, meta_data
+        status = "DONE" if response.status == MPIServerStatus.DONE.value else "RUNNING"
+        meta_data["status"] = status
+        return model, meta_data
 
     def invoke_custom_action(self, action: str, **kwargs) -> Dict:
         """

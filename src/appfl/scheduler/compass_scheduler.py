@@ -29,7 +29,9 @@ class CompassScheduler(BaseScheduler):
         }
         self.future_record = {}
         self.global_timestamp = 0
+        self._num_global_epochs = 0
         self._access_lock = threading.Lock() # handle client requests as a queue
+        self._timer_record = {}
         super().__init__(scheduler_configs, aggregator, logger)
 
     def get_parameters(self, **kwargs) -> Union[Future, Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
@@ -75,7 +77,17 @@ class CompassScheduler(BaseScheduler):
                 else self._group_update(client_id, local_model, arrival_group_idx, **kwargs)
             )
             return global_model
-        
+
+    def get_num_global_epochs(self) -> int:
+        """Return the total number of global epochs for federated learning."""
+        with self._access_lock:
+            return self._num_global_epochs
+
+    def clean_up(self) -> None:
+        """Optional function to clean up the scheduler states."""
+        for group_idx in self._timer_record:
+            self._timer_record[group_idx].cancel()
+
     def _record_info(self, client_id: Union[int, str]) -> None:
         """
         Record/update the client information for the coming client, including the client's
@@ -140,6 +152,7 @@ class CompassScheduler(BaseScheduler):
         self.client_info[client_id]['timestamp'] = self.global_timestamp
         self._assign_group(client_id, **kwargs)
         local_steps = self.client_info[client_id]['local_steps']
+        self._num_global_epochs += 1
         return global_model, {'local_steps': local_steps}
 
     def _group_update(
@@ -200,6 +213,8 @@ class CompassScheduler(BaseScheduler):
         :param `kwargs`: additional keyword arguments for the scheduler
         """
         if group_idx in self.arrival_group and group_idx in self.group_buffer:
+            if group_idx in self._timer_record:
+                del self._timer_record[group_idx]
             # merge the general buffer and group buffer
             local_models = {
                 **self.general_buffer['local_models'],
@@ -229,6 +244,7 @@ class CompassScheduler(BaseScheduler):
                 **kwargs
             )
             self.global_timestamp += 1
+            self._num_global_epochs += len(local_models)
             client_speeds = []
             for client_id in self.arrival_group[group_idx]['arrived_clients']:
                 self.client_info[client_id]['timestamp'] = self.global_timestamp
@@ -278,6 +294,7 @@ class CompassScheduler(BaseScheduler):
                 kwargs=kwargs,
             )
             group_timer.start()
+            self._timer_record[self.group_counter] = group_timer
             self.client_info[client_id]['goa'] = self.group_counter
             self.client_info[client_id]['local_steps'] = self.scheduler_configs.max_local_steps
             self.client_info[client_id]['start_time'] = curr_time
@@ -383,6 +400,7 @@ class CompassScheduler(BaseScheduler):
             kwargs=kwargs,
         )
         group_timer.start()
+        self._timer_record[self.group_counter] = group_timer
         self.client_info[client_id]['goa'] = self.group_counter
         self.client_info[client_id]['local_steps'] = assigned_steps
         self.client_info[client_id]['start_time'] = curr_time

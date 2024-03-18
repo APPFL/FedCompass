@@ -11,7 +11,7 @@ class MPITask(Enum):
 class MPIServerStatus(Enum):
     """MPI server status"""
     RUN = 0
-    STOP = 1
+    DONE = 1
     ERROR = 2
 
 @dataclass

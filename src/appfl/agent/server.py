@@ -1,5 +1,6 @@
 import io
 import torch
+import threading
 import torch.nn as nn
 from appfl.scheduler import *
 from appfl.aggregator import *
@@ -44,12 +45,12 @@ class APPFLServerAgent:
         return self.server_agent_config.client_configs
     
     def global_update(
-            self, 
-            client_id: Union[int, str],
-            local_model: Union[Dict, OrderedDict, bytes],
-            blocking: bool = False,
-            **kwargs
-        ) -> Union[Future, Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
+        self, 
+        client_id: Union[int, str],
+        local_model: Union[Dict, OrderedDict, bytes],
+        blocking: bool = False,
+        **kwargs
+    ) -> Union[Future, Dict, OrderedDict, Tuple[Union[Dict, OrderedDict], Dict]]:
         """
         Update the global model using the local model from a client and return the updated global model.
         :param: client_id: A unique client id for server to distinguish clients, which be obtained via `ClientAgent.get_id()`.
@@ -58,15 +59,19 @@ class APPFLServerAgent:
             Setting `blocking` to `True` will block the client until the global model is available. 
             Otherwise, the method may return a `Future` object if the most up-to-date global model is not yet available.
         """
-        if isinstance(local_model, bytes):
-            local_model = self._bytes_to_model(local_model)
-        global_model = self.scheduler.schedule(client_id, local_model, **kwargs)
-        if not isinstance(global_model, Future):
+        if self.training_finished(internal_check=True):
+            global_model = self.scheduler.get_parameters(init_model=False)
             return global_model
-        if blocking:
-            return global_model.result() # blocking until the `Future` is done
         else:
-            return global_model # return the `Future` object
+            if isinstance(local_model, bytes):
+                local_model = self._bytes_to_model(local_model)
+            global_model = self.scheduler.schedule(client_id, local_model, **kwargs)
+            if not isinstance(global_model, Future):
+                return global_model
+            if blocking:
+                return global_model.result() # blocking until the `Future` is done
+            else:
+                return global_model # return the `Future` object
         
     def get_parameters(
         self, 
@@ -89,6 +94,34 @@ class APPFLServerAgent:
         ) -> None:
         """Set the size of the local dataset of a client."""
         self.aggregator.set_client_sample_size(client_id, sample_size)
+
+    def training_finished(self, internal_check: bool = False) -> bool:
+        """Notify the client whether the training is finished."""
+        finished = self.server_agent_config.server_configs.num_global_epochs <= self.scheduler.get_num_global_epochs()
+        if finished and not internal_check:
+            if not hasattr(self, "num_finish_calls"):
+                self.num_finish_calls = 0
+                self._num_finish_calls_lock = threading.Lock()
+            with self._num_finish_calls_lock:
+                self.num_finish_calls += 1
+        return finished
+    
+    def server_terminated(self):
+        """Whether the server can be terminated from listening to the clients."""
+        if not hasattr(self, "num_finish_calls"):
+            return False
+        num_clients = (
+            self.server_agent_config.server_configs.num_clients if 
+            hasattr(self.server_agent_config.server_configs, "num_clients") else
+            self.server_agent_config.server_configs.scheduler_kwargs.num_clients if
+            hasattr(self.server_agent_config.server_configs.scheduler_kwargs, "num_clients") else
+            self.server_agent_config.server_configs.aggregator_kwargs.num_clients
+        )
+        with self._num_finish_calls_lock:
+            terminated = self.num_finish_calls >= num_clients
+        if terminated and hasattr(self.scheduler, "clean_up"):
+            self.scheduler.clean_up()
+        return terminated
 
     def _create_logger(self) -> None:
         kwargs = {}

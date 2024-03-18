@@ -53,7 +53,7 @@ for i in range(args.num_clients):
         sample_size=sample_size
     )
 
-for i in range(5):
+while not server_agent.training_finished():
     new_global_models = []
     for client_agent in client_agents:
         # Client local training

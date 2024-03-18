@@ -4,7 +4,6 @@ client_configs:
     trainer: "NaiveTrainer"
     mode: "step"
     num_local_steps: 100
-    num_global_epochs: 5
     optim: "Adam"
     optim_args:
       lr: 0.001
@@ -64,7 +63,7 @@ server_configs:
     alpha: 0.9
     gradient_based: True
   device: "cpu"
-  num_epochs: 2
+  num_global_epochs: 20
   server_validation: False
   logging_output_dirname: "./output"
   logging_output_filename: "result"

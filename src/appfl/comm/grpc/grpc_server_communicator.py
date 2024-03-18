@@ -54,7 +54,7 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
             meta_data = {}
         else:
             meta_data = json.loads(request.meta_data)
-        model = self.server_agent.get_parameters(**meta_data)
+        model = self.server_agent.get_parameters(**meta_data, blocking=True)
         if isinstance(model, tuple):
             model = model[0]
             meta_data = json.dumps(model[1])
@@ -98,8 +98,9 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
         else:
             meta_data = json.dumps({})
         global_model_serialized = serialize_model(global_model)
+        status = ServerStatus.DONE if self.server_agent.training_finished() else ServerStatus.RUN
         response = UpdateGlobalModelResponse(
-            header=ServerHeader(status=ServerStatus.RUN),
+            header=ServerHeader(status=status),
             global_model=global_model_serialized,
             meta_data=meta_data,
         )
