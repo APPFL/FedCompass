@@ -44,11 +44,12 @@ else:
     sample_size = client_agent.get_sample_size()
     client_communicator.invoke_custom_action(action='set_sample_size', sample_size=sample_size)
     # Local training and global model update iterations
-    for i in range(10):
+    while True:
         client_agent.train()
         local_model = client_agent.get_parameters()
-        new_global_model = client_communicator.update_global_model(local_model)
-        if isinstance(new_global_model, tuple):
-            new_global_model, metadata = new_global_model[0], new_global_model[1]
+        new_global_model, metadata = client_communicator.update_global_model(local_model)
+        if metadata['status'] == 'DONE':
+            break
+        if 'local_steps' in metadata:
             client_agent.trainer.train_configs.num_local_steps = metadata['local_steps']
         client_agent.load_parameters(new_global_model)

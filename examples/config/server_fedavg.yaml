@@ -4,7 +4,6 @@ client_configs:
     trainer: "NaiveTrainer"
     mode: "step"
     num_local_steps: 100
-    num_global_epochs: 5
     optim: "Adam"
     optim_args:
       lr: 0.001
@@ -56,7 +55,7 @@ server_configs:
   aggregator_kwargs:
     client_weights_mode: "equal"
   device: "cpu"
-  num_epochs: 2
+  num_global_epochs: 3
   server_validation: False
   logging_output_dirname: "./output"
   logging_output_filename: "result"
