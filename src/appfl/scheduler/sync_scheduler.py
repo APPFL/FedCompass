@@ -18,6 +18,7 @@ class SyncScheduler(BaseScheduler):
             f"{self.__class__.__name__}: num_clients attribute is not found in the server configuration."
         )
         self.num_clients = self.scheduler_configs.num_clients
+        self._num_global_epochs = 0
 
     def schedule(self, client_id: Union[int, str], local_model: Union[Dict, OrderedDict], **kwargs) -> Future:
         """
@@ -42,4 +43,12 @@ class SyncScheduler(BaseScheduler):
                 client_id, future = self.future.popitem()
                 future.set_result(aggregated_model)
             self.local_models.clear()
+            self._num_global_epochs += 1
         return future
+    
+    def get_num_global_epochs(self) -> int:
+        """
+        Get the number of global epochs.
+        :return: the number of global epochs
+        """
+        return self._num_global_epochs
