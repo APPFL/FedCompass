@@ -1,7 +1,6 @@
 import copy
 import torch
 import torch.nn as nn
-from torch.optim import *
 from omegaconf import DictConfig
 from collections import OrderedDict
 from typing import Any, Dict, Union
@@ -17,7 +16,6 @@ class ICEADMMAggregator(BaseAggregator):
         self.model = model
         self.logger = logger
         self.aggregator_config = aggregator_config
-        self.client_weights_mode = aggregator_config.get("client_weights_mode", "equal")
         self.named_parameters = set()
         for name, _ in self.model.named_parameters():
             self.named_parameters.add(name)
