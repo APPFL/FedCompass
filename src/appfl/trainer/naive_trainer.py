@@ -39,6 +39,8 @@ class NaiveTrainer(BaseTrainer):
             logger=logger,
             **kwargs
         )
+        if not hasattr(self.train_configs, "device"):
+            self.train_configs.device = "cpu"
         self.train_dataloader = DataLoader(
             self.train_dataset,
             batch_size=self.train_configs.get("train_batch_size", 32),
@@ -70,7 +72,7 @@ class NaiveTrainer(BaseTrainer):
         if send_gradient:
             self.model_prev = copy.deepcopy(self.model.state_dict())
 
-        self.model.to(self.train_configs.get("device", "cpu"))
+        self.model.to(self.train_configs.device)
         do_validation = self.train_configs.get("do_validation", False) and self.val_dataloader is not None
         do_pre_validation = self.train_configs.get("do_pre_validation", False) and do_validation
         
@@ -169,7 +171,7 @@ class NaiveTrainer(BaseTrainer):
             self.model_state = copy.deepcopy(self.model.state_dict())
         
         # Move to CPU for communication
-        if self.train_configs.get("device", "cpu") == "cuda":
+        if self.train_configs.device == "cuda":
             for k in self.model_state:
                 self.model_state[k] = self.model_state[k].cpu()
 
@@ -186,7 +188,7 @@ class NaiveTrainer(BaseTrainer):
         Validate the model
         :return: loss, accuracy
         """
-        device = self.train_configs.get("device", "cpu")
+        device = self.train_configs.device
         self.model.eval()
         val_loss = 0
         with torch.no_grad():
@@ -210,7 +212,7 @@ class NaiveTrainer(BaseTrainer):
         :param target: target label
         :return: loss, prediction, label
         """
-        device = self.train_configs.get("device", "cpu")
+        device = self.train_configs.device
         data = data.to(device)
         target = target.to(device)
         optimizer.zero_grad()
