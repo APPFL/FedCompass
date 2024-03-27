@@ -93,7 +93,7 @@ class APPFLServerAgent:
             sample_size: int,
             sync: bool = False,
             blocking: bool = False,
-        ) -> Optional[Union[float, Future]]:
+        ) -> Optional[Union[Dict, Future]]:
         """
         Set the size of the local dataset of a client.
         :param: client_id: A unique client id for server to distinguish clients, which can be obtained via `ClientAgent.get_id()`.
@@ -131,7 +131,7 @@ class APPFLServerAgent:
                     total_sample_size = sum(self._client_sample_size.values())
                     for client_id in self._client_sample_size_future:
                         self._client_sample_size_future[client_id].set_result(
-                            self._client_sample_size[client_id] / total_sample_size
+                            {"client_weight": self._client_sample_size[client_id] / total_sample_size}
                         )
                     self._client_sample_size = {}
                     self._client_sample_size_future = {}
