@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Optional
 from omegaconf import OmegaConf
+from concurrent.futures import Future
 from .grpc_communicator_pb2 import *
 from .grpc_communicator_pb2_grpc import *
 from appfl.agent import APPFLServerAgent
@@ -125,11 +126,19 @@ class GRPCServerCommunicator(GRPCCommunicatorServicer):
             meta_data = json.loads(request.meta_data)
         if action == "set_sample_size":
             assert "sample_size" in meta_data, "The metadata should contain parameter `sample_size`."
-            datasize = meta_data['sample_size']
-            self.server_agent.set_sample_size(client_id, datasize)
-            response = CustomActionResponse(
-                header=ServerHeader(status=ServerStatus.RUN),
-            )
+            ret_val = self.server_agent.set_sample_size(client_id, **meta_data)
+            if ret_val is None:
+                response = CustomActionResponse(
+                    header=ServerHeader(status=ServerStatus.RUN),
+                )
+            else:
+                if isinstance(ret_val, Future):
+                    ret_val = ret_val.result()
+                results = json.dumps(ret_val)
+                response = CustomActionResponse(
+                    header=ServerHeader(status=ServerStatus.RUN),
+                    results=results,
+                )
             return response
         else:
             raise NotImplementedError(f"Custom action {action} is not implemented.")

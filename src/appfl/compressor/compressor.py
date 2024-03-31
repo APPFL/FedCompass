@@ -80,9 +80,12 @@ class Compressor:
             num_lossy_elements = 0
             compressed_models = OrderedDict()
             for key, weights in model.items():
-                comprsessed_weights, lossy_elements = self._compress_weights(weights)
-                compressed_models[key] = comprsessed_weights
-                lossy_elements += lossy_elements
+                if isinstance(weights, dict) or isinstance(weights, OrderedDict):
+                    comprsessed_weights, lossy_elements = self._compress_weights(weights)
+                    compressed_models[key] = comprsessed_weights
+                    lossy_elements += lossy_elements
+                else:
+                    compressed_models[key] = weights
         else:
             compressed_models, num_lossy_elements = self._compress_weights(model)
         return pickle.dumps(compressed_models)
@@ -123,7 +126,10 @@ class Compressor:
         if is_nested:
             decompressed_model = OrderedDict()
             for key, value in compressed_model.items():
-                decompressed_model[key] = self._decompress_model(value, model)
+                if isinstance(value, dict) or isinstance(value, OrderedDict):
+                    decompressed_model[key] = self._decompress_model(value, model)
+                else:    
+                    decompressed_model[key] = value
         else:
             decompressed_model = self._decompress_model(compressed_model, model)
         return decompressed_model

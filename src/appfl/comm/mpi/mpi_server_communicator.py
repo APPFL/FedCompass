@@ -1,3 +1,4 @@
+import time
 import json
 import logging
 from mpi4py import MPI
@@ -21,7 +22,8 @@ class MPIServerCommunicator:
         self.comm_size = comm.Get_size()
         self.server_agent = server_agent
         self.logger = logger if logger is not None else self._default_logger()
-        self._response_futures: Dict[int, Future] = {}
+        self._global_model_futures: Dict[int, Future] = {}
+        self._meta_data_futures: Dict[int, Future] = {}
 
     def serve(self):
         """
@@ -30,17 +32,19 @@ class MPIServerCommunicator:
         self.logger.info(f"Server starting...")
         status = MPI.Status()
         while not self.server_agent.server_terminated():
-            self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-            source = status.Get_source()
-            tag = status.Get_tag()
-            count = status.Get_count(MPI.BYTE)
-            request_buffer = bytearray(count)
-            self.comm.Recv(request_buffer, source=source, tag=tag)
-            request = byte_to_request(request_buffer)
-            response = self._request_handler(client_id=source, request_tag=tag, request=request)
-            if response is not None:
-                response_bytes = response_to_byte(response)
-                self.comm.Send(response_bytes, dest=source, tag=source)
+            time.sleep(0.1)
+            msg_flag = self.comm.iprobe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            if msg_flag:
+                source = status.Get_source()
+                tag = status.Get_tag()
+                count = status.Get_count(MPI.BYTE)
+                request_buffer = bytearray(count)
+                self.comm.Recv(request_buffer, source=source, tag=tag)
+                request = byte_to_request(request_buffer)
+                response = self._request_handler(client_id=source, request_tag=tag, request=request)
+                if response is not None:
+                    response_bytes = response_to_byte(response)
+                    self.comm.Send(response_bytes, dest=source, tag=source)
         self.logger.info(f"Server terminated.")
 
     def _request_handler(
@@ -119,8 +123,8 @@ class MPIServerCommunicator:
                 meta_data=meta_data,
             )
         else:
-            self._response_futures[client_id] = model
-            self._check_response_futures()
+            self._global_model_futures[client_id] = model
+            self._check_global_model_futures()
             return None
 
     def _update_global_model(
@@ -156,38 +160,63 @@ class MPIServerCommunicator:
                 meta_data=meta_data,
             )
         else:
-            self._response_futures[client_id] = global_model
-            self._check_response_futures()
+            self._global_model_futures[client_id] = global_model
+            self._check_global_model_futures()
             return None
 
     def _invoke_custom_action(
         self,
         client_id: int,
         request: MPITaskRequest,
-    ) -> MPITaskResponse:
+    ) -> Optional[MPITaskResponse]:
         """
         Invoke custom action on the server.
         :param: `client_id`: A unique client ID, which is the rank of the client in MPI (only for logging purpose now)
         :param: `request.meta_data`: JSON serialized metadata dictionary (if needed)
         :return `response.status`: Server status
+        :return `response.meta_data`: JSON serialized metadata dictionary (if needed)
         """
         self.logger.info(f"Received InvokeCustomAction request from client {client_id}")
         meta_data = json.loads(request.meta_data) if len(request.meta_data) > 0 else {}
         assert "action" in meta_data, "The action is not specified in the metadata"
         action = meta_data["action"]
+        del meta_data["action"]
         if action == "set_sample_size":
-            sample_size = meta_data["sample_size"]
-            self.server_agent.set_sample_size(client_id, sample_size)
-            return MPITaskResponse(status=MPIServerStatus.RUN.value)
+            meta_data["blocking"] = False
+            ret_val = self.server_agent.set_sample_size(client_id, **meta_data)
+            if ret_val is None:
+                return MPITaskResponse(status=MPIServerStatus.RUN.value)
+            else:
+                self._meta_data_futures[client_id] = ret_val
+                self._check_meta_data_futures()
+                return None
         else:
             raise NotImplementedError(f"Custom action {action} is not implemented.")
+        
+    def _check_meta_data_futures(self):
+        """
+        Return the updated metadata to the client if the metadata `Future` object is available.
+        """
+        delete_keys = []
+        for client_id, future in self._meta_data_futures.items():
+            if future.done():
+                meta_data = future.result()
+                response = MPITaskResponse(
+                    status=MPIServerStatus.RUN.value,
+                    meta_data=json.dumps(meta_data),
+                )
+                response_bytes = response_to_byte(response)
+                self.comm.Send(response_bytes, dest=client_id, tag=client_id)
+                delete_keys.append(client_id)
+        for key in delete_keys:
+            del self._meta_data_futures[key]
 
-    def _check_response_futures(self):
+    def _check_global_model_futures(self):
         """
         Return the updated global model to the client if the global model `Future` object is available.
         """
         delete_keys = []
-        for client_id, future in self._response_futures.items():
+        for client_id, future in self._global_model_futures.items():
             if future.done():
                 global_model = future.result()
                 if isinstance(global_model, tuple):
@@ -206,7 +235,7 @@ class MPIServerCommunicator:
                 self.comm.Send(response_bytes, dest=client_id, tag=client_id)
                 delete_keys.append(client_id)
         for key in delete_keys:
-            del self._response_futures[key]
+            del self._global_model_futures[key]
 
     def _default_logger(self):
         """Create a default logger for the gRPC server if no logger provided."""

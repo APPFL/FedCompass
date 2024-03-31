@@ -79,7 +79,7 @@ class NaiveTrainer(BaseTrainer):
         # Set up logging title
         if self.round == 0:
             title = (
-                ["Round", "Pre Val?" "Time", "Train Loss", "Train Accuracy"] 
+                ["Round", "Time", "Train Loss", "Train Accuracy"] 
                 if not do_validation
                 else (
                     ["Round", "Pre Val?", "Time", "Train Loss", "Train Accuracy", "Val Loss", "Val Accuracy"] 
@@ -93,7 +93,10 @@ class NaiveTrainer(BaseTrainer):
 
         if do_pre_validation:
             val_loss, val_accuracy = self._validate()
-            self.logger.log_content([self.round, "Y", " ", " ", " ", val_loss, val_accuracy])
+            content = [self.round, "Y", " ", " ", " ", val_loss, val_accuracy]  
+            if self.train_configs.mode == "epoch":
+                content.insert(1, 0)
+            self.logger.log_content(content)
         
         # Start training
         optim_module = importlib.import_module("torch.optim")
