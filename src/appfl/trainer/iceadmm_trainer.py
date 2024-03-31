@@ -6,7 +6,7 @@ import numpy as np
 import torch.nn as nn
 from omegaconf import DictConfig
 from collections import OrderedDict
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from typing import Any, Optional, Tuple
 from appfl.trainer.base_trainer import BaseTrainer
 from appfl.privacy import laplace_mechanism_output_perturb
@@ -22,8 +22,8 @@ class ICEADMMTrainer(BaseTrainer):
         model: Optional[nn.Module]=None,
         loss_fn: Optional[nn.Module]=None,
         metric: Optional[Any]=None,
-        train_dataset: Optional[DataLoader]=None,
-        val_dataset: Optional[DataLoader]=None,
+        train_dataset: Optional[Dataset]=None,
+        val_dataset: Optional[Dataset]=None,
         train_configs: DictConfig = DictConfig({}),
         logger: Optional[Any]=None,
         **kwargs
@@ -68,9 +68,9 @@ class ICEADMMTrainer(BaseTrainer):
             self.named_parameters.add(name)
             self.primal_states[name] = param.data
             self.dual_states[name] = torch.zeros_like(param.data)
+        self._sanity_check()
 
     def train(self):
-        self._sanity_check()
         self.model.train()
         self.model.to(self.train_configs.device)
         do_validation = self.train_configs.get("do_validation", False) and self.val_dataloader is not None
