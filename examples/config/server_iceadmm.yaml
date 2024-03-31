@@ -23,7 +23,7 @@ client_configs:
     # Client validation
     do_validation: True
     do_pre_validation: True
-    pre_validation_interval: 3
+    pre_validation_interval: 1
     metric_path: "./metric/acc.py"
     metric_name: "accuracy"
     # Differential privacy
@@ -66,7 +66,7 @@ server_configs:
   aggregator_kwargs:
     num_clients: 2
   device: "cpu"
-  num_global_epochs: 3
+  num_global_epochs: 10
   server_validation: False
   logging_output_dirname: "./output"
   logging_output_filename: "result"
