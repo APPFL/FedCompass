@@ -23,6 +23,7 @@ client_configs:
     # Client validation
     do_validation: True
     do_pre_validation: True
+    pre_validation_interval: 3
     metric_path: "./metric/acc.py"
     metric_name: "accuracy"
     # Differential privacy
