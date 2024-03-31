@@ -1,3 +1,4 @@
+import time
 import json
 import logging
 from mpi4py import MPI
@@ -31,17 +32,19 @@ class MPIServerCommunicator:
         self.logger.info(f"Server starting...")
         status = MPI.Status()
         while not self.server_agent.server_terminated():
-            self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-            source = status.Get_source()
-            tag = status.Get_tag()
-            count = status.Get_count(MPI.BYTE)
-            request_buffer = bytearray(count)
-            self.comm.Recv(request_buffer, source=source, tag=tag)
-            request = byte_to_request(request_buffer)
-            response = self._request_handler(client_id=source, request_tag=tag, request=request)
-            if response is not None:
-                response_bytes = response_to_byte(response)
-                self.comm.Send(response_bytes, dest=source, tag=source)
+            time.sleep(0.1)
+            msg_flag = self.comm.iprobe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            if msg_flag:
+                source = status.Get_source()
+                tag = status.Get_tag()
+                count = status.Get_count(MPI.BYTE)
+                request_buffer = bytearray(count)
+                self.comm.Recv(request_buffer, source=source, tag=tag)
+                request = byte_to_request(request_buffer)
+                response = self._request_handler(client_id=source, request_tag=tag, request=request)
+                if response is not None:
+                    response_bytes = response_to_byte(response)
+                    self.comm.Send(response_bytes, dest=source, tag=source)
         self.logger.info(f"Server terminated.")
 
     def _request_handler(
