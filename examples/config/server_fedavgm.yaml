@@ -51,9 +51,10 @@ server_configs:
   scheduler_kwargs:
     num_clients: 2
     same_init_model: True
-  aggregator: "FedAvgAggregator"
+  aggregator: "FedAvgMAggregator"
   aggregator_kwargs:
     client_weights_mode: "equal"
+    server_momentum_param_1: 0.9
   device: "cpu"
   num_global_epochs: 10
   server_validation: False
