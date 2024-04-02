@@ -5,5 +5,6 @@ from .fedadam_aggregator import FedAdamAggregator
 from .fedyogi_aggregator import FedYogiAggregator
 from .fedadagrad_aggregator import FedAdagradAggregator
 from .fedasync_aggregator import FedAsyncAggregator
+from .fedbuff_aggregator import FedBuffAggregator
 from .fedcompass_aggregator import FedCompassAggregator
 from .iceadmm_aggregator import ICEADMMAggregator

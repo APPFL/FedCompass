@@ -49,7 +49,7 @@ class FedAvgAggregator(BaseAggregator):
         """
         Compute the changes to the global model after the aggregation.
         """
-        for name in self.model.state_dict():
+        for name in self.named_parameters:
             self.step[name] = torch.zeros_like(self.model.state_dict()[name])
         for client_id, model in local_models.items():
             if (
