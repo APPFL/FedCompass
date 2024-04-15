@@ -43,6 +43,11 @@ setuptools.setup(
         "scipy",
         "lz4",
         "python-xz",
+        "globus-compute-sdk",
+        "globus-compute-endpoint",
+        "boto3",
+        "botocore",
+        "jupyter",
     ],
     entry_points={
         "console_scripts": [
