@@ -1,8 +1,10 @@
 import os
 import sys
+import torch
 import random
 import string
 import pathlib
+import pickle as pkl
 import os.path as osp
 import importlib.util
 
@@ -174,6 +176,22 @@ def get_function_from_file_source(source, function_name):
 
     return function
 
+def run_function_from_file_source(source, function_name, *args, **kwargs):
+    """
+    Runs a function from a given source code.
+
+    :param source: The source code where the function is defined.
+    :param function_name: The name of the function to be executed.
+    :param args: Positional arguments to be passed to the function.
+    :param kwargs: Keyword arguments to be passed to the function.
+    :return: The result of the function execution, or None if execution fails.
+    """
+    function = get_function_from_file_source(source, function_name)
+    if function is None:
+        return None
+    result = function(*args, **kwargs)
+    return result
+
 def get_unique_filename(
     dirname: str,
     filename: str,
@@ -193,3 +211,40 @@ def get_unique_filename(
         unique_filename = f"{filename_base}_{unique}{ext}"
         unique += 1
     return dirname, unique_filename
+
+def load_data_from_file(
+    file_path: str, 
+    to_device=None
+):
+    """
+    Read data from file using the corresponding readers.
+    For uncompressed model weights of PyTorch models, the weights are stored in a dictionary in the `pt` or `pth` file.
+    For compressed model weights of PyTorch models, the weights are stored as bytes in the `pkl` file.
+    """
+    TORCH_EXT = ['.pt', '.pth']
+    PICKLE_EXT= ['.pkl']
+    file_ext = osp.splitext(osp.basename(file_path))[-1]
+    if  file_ext in TORCH_EXT:
+        results = torch.load(file_path, map_location=to_device)
+    elif file_ext in PICKLE_EXT:
+        with open(file_path, "rb") as fi:
+            results = pkl.load(fi)
+    else:
+        raise RuntimeError("File extension %s is not supported" % file_ext)
+    return results
+
+def dump_data_to_file(obj, file_path: str):
+    """
+    Write data to file using the corresponding readers
+    """
+    TORCH_EXT = ['.pt', '.pth']
+    PICKLE_EXT= ['.pkl']
+    file_ext = osp.splitext(osp.basename(file_path))[-1]
+    if file_ext in TORCH_EXT:
+        torch.save(obj, file_path)
+    elif file_ext in PICKLE_EXT:
+        with open(file_path, "wb") as fo:
+            pkl.dump(obj, fo)
+    else:
+        raise RuntimeError("File extension %s is not supported" % file_ext)
+    return True
