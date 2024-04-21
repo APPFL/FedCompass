@@ -1,3 +1,4 @@
+from typing import Dict
 from appfl.login_manager import BaseAuthenticator
 
 class NaiveAuthenticator(BaseAuthenticator):
@@ -8,7 +9,7 @@ class NaiveAuthenticator(BaseAuthenticator):
     def __init__(self, *, auth_token: str = "appfl-naive-auth-token"):
         self.auth_token = auth_token
 
-    def get_auth_token(self) -> dict:
+    def get_auth_token(self) -> Dict[str, str]:
         return {
             "auth_token": self.auth_token,
         }
