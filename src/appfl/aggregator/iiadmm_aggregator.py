@@ -6,11 +6,11 @@ from collections import OrderedDict
 from typing import Any, Dict, Union
 from appfl.aggregator import BaseAggregator
 
-class ICEADMMAggregator(BaseAggregator):
+class IIADMMAggregator(BaseAggregator):
     """
-    ICEADMM Aggregator class for Federated Learning.
-    It has to be used with the ICEADMMTrainer.
-    For more details, check paper: https://arxiv.org/pdf/2110.15318.pdf
+    IIADMMAggregator Aggregator class for Federated Learning.
+    It has to be used with the IIADMMTrainer.
+    For more details, check paper: https://arxiv.org/pdf/2202.03672.pdf
     """
     def __init__(
         self,
@@ -47,13 +47,15 @@ class ICEADMMAggregator(BaseAggregator):
                 self.dual_states[i] = OrderedDict()
                 self.primal_states_curr[i] = OrderedDict()
                 self.primal_states_prev[i] = OrderedDict()
+                # dual_state = 0 at the beginning
+                for name in self.named_parameters:
+                    self.dual_states[i][name] = torch.zeros_like(self.model.state_dict()[name])
 
         global_state = copy.deepcopy(self.model.state_dict())
 
         for client_id, model in local_models.items():
             if model is not None:
                 self.primal_states[client_id] = model["primal"]
-                self.dual_states[client_id] = model["dual"]
                 self.penalty[client_id] = model["penalty"]
         
         # Calculate the primal residual
@@ -92,18 +94,17 @@ class ICEADMMAggregator(BaseAggregator):
                 dual_res += torch.sum(torch.square(res))
             self.dual_res = torch.sqrt(dual_res).item()
                 
-        total_penalty = 0
-        for client_id in local_models:
-            total_penalty += self.penalty[client_id]
-        
         for name, param in self.model.named_parameters():
             state_param = torch.zeros_like(param)
             for client_id in local_models:
-                self.primal_states[client_id][name] = self.primal_states[client_id][name].to(self.device)
-                self.dual_states[client_id][name] = self.dual_states[client_id][name].to(self.device)
-
-                state_param += (self.penalty[client_id] / total_penalty) * self.primal_states[client_id][name] + (1.0 / total_penalty) * self.dual_states[client_id][name]
-            global_state[name] = state_param
+                self.dual_states[client_id][name] += self.penalty[client_id] * (
+                    global_state[name] - self.primal_states[client_id][name]
+                )
+                state_param += (
+                    self.primal_states[client_id][name]
+                    - (1.0 / self.penalty[client_id]) * self.dual_states[client_id][name]
+                )
+            global_state[name] = state_param / self.num_clients
         
         self.model.load_state_dict(global_state)
         return global_state

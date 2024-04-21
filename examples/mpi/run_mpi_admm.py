@@ -1,9 +1,11 @@
 """
-Running the ICEADMM algorithm using MPI for FL. This example mainly shows 
+Running the ADMM-based algorithm using MPI for FL. This example mainly shows 
 the extendibility of the framework to support custom algorithms. In this case,
 the server and clients need to communicate primal and dual states, and a  
 penalty parameter. In addition, the clients also need to know its relative
 sample size for local training purposes.
+mpiexec -n 6 python  mpi/run_mpi_admm.py --server_config config/server_iiadmm.yaml
+mpiexec -n 6 python  mpi/run_mpi_admm.py --server_config config/server_iceadmm.yaml
 """
 
 import argparse
@@ -48,7 +50,7 @@ else:
     client_agent.load_config(client_config)
     init_global_model = client_communicator.get_global_model(init_model=True)
     client_agent.load_parameters(init_global_model)
-    # (Specific to ICEADMM) Send the sample size to the server and set the client weight
+    # (Specific to ICEADMM and IIADMM) Send the sample size to the server and set the client weight
     sample_size = client_agent.get_sample_size()
     client_weight = client_communicator.invoke_custom_action(action='set_sample_size', sample_size=sample_size, sync=True)
     client_agent.trainer.set_weight(client_weight["client_weight"])

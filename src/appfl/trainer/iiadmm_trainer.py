@@ -11,11 +11,11 @@ from typing import Any, Optional, Tuple
 from appfl.trainer.base_trainer import BaseTrainer
 from appfl.privacy import laplace_mechanism_output_perturb
 
-class ICEADMMTrainer(BaseTrainer):
+class IIADMMTrainer(BaseTrainer):
     """
-    ICEADMM Trainer:
-        Local trainer for the ICEADMM algorithm.
-        This trainer must be used with the ICEADMMAggregator.
+    IIADMMTrainer:
+        Local trainer for the IIADMM algorithm.
+        This trainer must be used with the IIADMMAggregator.
     """
     def __init__(
         self,
@@ -54,7 +54,6 @@ class ICEADMMTrainer(BaseTrainer):
         ) if self.val_dataset is not None else None
 
         self.penalty = self.train_configs.get("init_penalty", 500.0)
-        self.proximity = self.train_configs.get("init_proximity", 0)
         self.is_first_iter = True
 
         # At initial, (1) primal_states = global_state, (2) dual_states = 0
@@ -173,6 +172,10 @@ class ICEADMMTrainer(BaseTrainer):
         
         self.round += 1
 
+        """Update dual states"""
+        for name, param in self.model.named_parameters():
+            self.dual_states[name] += self.penalty * (global_state[name] - self.primal_states[name])
+
         """Differential Privacy"""
         for name, param in self.model.named_parameters():
             param.data = self.primal_states[name].to(self.train_configs.device)
@@ -195,7 +198,6 @@ class ICEADMMTrainer(BaseTrainer):
 
         self.model_state = OrderedDict()
         self.model_state["primal"] = self._model_state
-        self.model_state["dual"] = self.dual_states
         self.model_state["penalty"] = self.penalty
 
     def get_parameters(self) -> OrderedDict:
@@ -308,30 +310,36 @@ class ICEADMMTrainer(BaseTrainer):
         coefficient = 1
         if getattr(self.train_configs, "coeff_grad", False):
             coefficient = self.weight * len(target) / len(self.train_dataloader.dataset)
-        self._iceadmm_step(coefficient, global_state)
+        self._iiadmm_step(coefficient, global_state, optimizer)
 
         return loss.item(), output.detach().cpu().numpy(), target.detach().cpu().numpy()
 
-    def _iceadmm_step(self, coefficient, global_state):
+    def _iiadmm_step(self, coefficient, global_state, optimizer):
         """
         Update primal and dual states
         """
+        momentum = self.train_configs.optim_args.get("momentum", 0)
+        weight_decay = self.train_configs.optim_args.get("weight_decay", 0)
+        dampening = self.train_configs.optim_args.get("dampening", 0)
+        nesterov = self.train_configs.optim_args.get("nesterov", False)
         for name, param in self.model.named_parameters():
-            self.primal_states[name] = self.primal_states[name].to(self.train_configs.device)
-            self.dual_states[name] = self.dual_states[name].to(self.train_configs.device)
-            global_state[name] = global_state[name].to(self.train_configs.device)
+            grad = copy.deepcopy(param.grad * coefficient)
+            if weight_decay != 0:
+                grad.add_(weight_decay, self.primal_states[name])
+            if momentum != 0:
+                param_state = optimizer.state[param]
+                if "momentum_buffer" not in param_state:
+                    buf = param_state["momentum_buffer"] = grad.clone()
+                else:
+                    buf = param_state["momentum_buffer"]
+                    buf.mul_(momentum).add_(1 - dampening, grad)
+                if nesterov:
+                    grad.add_(momentum, buf)
+                else:
+                    grad = buf
 
-            grad = param.grad * coefficient
             """Update primal"""
-            self.primal_states[name] = self.primal_states[name] - (
-                self.penalty * (self.primal_states[name] - global_state[name])
-                + grad
-                + self.dual_states[name]
-            ) / (self.weight * self.proximity + self.penalty)
-            """Update dual"""
-            self.dual_states[name] = self.dual_states[name] + self.penalty * (
-                self.primal_states[name] - global_state[name]
-            )
+            self.primal_states[name] = global_state[name] + (1 / self.penalty) * (self.dual_states[name] - grad)
 
     def _validate(self) -> Tuple[float, float]:
         """
