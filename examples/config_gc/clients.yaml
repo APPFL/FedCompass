@@ -16,9 +16,7 @@ clients:
         num_clients: 2
         client_id: 0
         partition_strategy: "class_noniid"
-        visualization: True
-        output_dirname: "./output"
-        output_filename: "visualization.pdf"
+        visualization: False
 
   - endpoint_id: "4d34697f-f2e0-41dc-87b4-9821a02c0c0a"
     train_configs:
@@ -37,6 +35,4 @@ clients:
         num_clients: 2
         client_id: 1
         partition_strategy: "class_noniid"
-        visualization: True
-        output_dirname: "./output"
-        output_filename: "visualization.pdf"
+        visualization: False

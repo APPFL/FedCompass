@@ -3,6 +3,7 @@ import time
 import uuid
 import pathlib
 import logging
+from datetime import datetime
 from omegaconf import OmegaConf
 from collections import OrderedDict
 from globus_compute_sdk import Executor, Client
@@ -39,6 +40,8 @@ class GlobusComputeServerCommunicator:
         self.gce = Executor(funcx_client=gcc) # Globus Compute Executor
         self.logger = logger if logger is not None else self._default_logger()
         client_config_from_server = server_agent_config.client_configs
+        # Create a unique experiment ID for this federated learning experiment
+        experiment_id = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # Initiate the Globus Compute client endpoints.
         self.client_endpoints: Dict[str, GlobusComputeClientEndpoint] = {}
         for client_config in client_agent_configs:
@@ -48,7 +51,9 @@ class GlobusComputeServerCommunicator:
                 client_config.data_configs.dataset_source = file.read()
             del client_config.data_configs.dataset_path
             client_endpoint_id = client_config.endpoint_id
-            del client_config.endpoint_id
+            client_config.experiment_id = experiment_id
+            if not hasattr(client_config.train_configs, "logging_id"):
+                client_config.train_configs.logging_id = client_config.endpoint_id
             self.client_endpoints[client_endpoint_id] = GlobusComputeClientEndpoint(
                 client_endpoint_id, 
                 OmegaConf.merge(client_config_from_server, client_config),
@@ -59,7 +64,7 @@ class GlobusComputeServerCommunicator:
         if self.use_s3bucket:
             self.logger.info(f'Using S3 bucket {s3_bucket} for model transfer.')
             s3_creds_file = server_agent_config.server_configs.comm_configs.globus_compute_configs.get("s3_creds_file", None)
-            s3_temp_dir = server_agent_config.server_configs.comm_configs.globus_compute_configs.get("s3_temp_dir", str(pathlib.Path.home() / ".appfl" / "s3_tmp_dir"))
+            s3_temp_dir = server_agent_config.server_configs.comm_configs.globus_compute_configs.get("s3_temp_dir", str(pathlib.Path.home() / ".appfl" / "globus_compute" / "server" / experiment_id))
             if not os.path.exists(s3_temp_dir):
                 pathlib.Path(s3_temp_dir).mkdir(parents=True)
             CloudStorage.init(s3_bucket, s3_creds_file, s3_temp_dir, self.logger)
