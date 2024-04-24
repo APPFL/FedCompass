@@ -32,7 +32,7 @@ if rank == 0:
         server_agent_config.server_configs.aggregator_kwargs.num_clients = num_clients
     # Create the server agent and communicator
     server_agent = APPFLServerAgent(server_agent_config=server_agent_config)
-    server_communicator = MPIServerCommunicator(comm, server_agent)
+    server_communicator = MPIServerCommunicator(comm, server_agent, logger=server_agent.logger)
     # Start the server to serve the clients
     server_communicator.serve()
 else:
